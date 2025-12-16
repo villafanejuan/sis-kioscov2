@@ -1,0 +1,438 @@
+<?php
+require_once __DIR__ . '/../app/bootstrap.php';
+checkSession();
+
+// Verificar que sea admin
+$isAdmin = checkAdmin();
+if (!$isAdmin) {
+    $_SESSION['flash_message'] = 'Solo administradores pueden acceder a la gestión de caja';
+    $_SESSION['flash_type'] = 'error';
+    header('Location: dashboard.php');
+    exit;
+}
+
+$userName = $_SESSION['nombre'] ?? $_SESSION['username'];
+$userId = $_SESSION['user_id'];
+$message = '';
+$messageType = '';
+
+// Generar token CSRF
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Procesar acciones
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $message = 'Error de seguridad. Inténtalo de nuevo.';
+        $messageType = 'error';
+    } else {
+        try {
+            if (isset($_POST['abrir_turno'])) {
+                // Verificar que no haya turno abierto
+                $turnoAbierto = $pdo->query("SELECT id FROM turnos_caja WHERE estado = 'abierto'")->fetch();
+                if ($turnoAbierto) {
+                    $message = 'Ya existe un turno abierto. Cierra el turno actual primero.';
+                    $messageType = 'error';
+                } else {
+                    $montoInicial = floatval($_POST['monto_inicial']);
+                    $notasApertura = sanitize($_POST['notas_apertura'] ?? '');
+
+                    $pdo->beginTransaction();
+
+                    // Crear turno
+                    $stmt = $pdo->prepare("INSERT INTO turnos_caja (usuario_id, fecha_apertura, monto_inicial, estado, notas_apertura) VALUES (?, NOW(), ?, 'abierto', ?)");
+                    $stmt->execute([$userId, $montoInicial, $notasApertura]);
+                    $turnoId = $pdo->lastInsertId();
+
+                    // Crear movimiento inicial
+                    $stmt = $pdo->prepare("INSERT INTO movimientos_caja (turno_id, tipo, monto, descripcion, fecha, usuario_id) VALUES (?, 'inicial', ?, 'Apertura de turno', NOW(), ?)");
+                    $stmt->execute([$turnoId, $montoInicial, $userId]);
+
+                    $pdo->commit();
+
+                    $message = 'Turno abierto exitosamente con $' . number_format($montoInicial, 2);
+                    $messageType = 'success';
+                }
+            } elseif (isset($_POST['cerrar_turno'])) {
+                $turnoAbierto = $pdo->query("SELECT * FROM turnos_caja WHERE estado = 'abierto'")->fetch();
+                if (!$turnoAbierto) {
+                    $message = 'No hay turno abierto para cerrar.';
+                    $messageType = 'error';
+                } else {
+                    $montoFinal = floatval($_POST['monto_final']);
+                    $notasCierre = sanitize($_POST['notas_cierre'] ?? '');
+
+                    // Calcular monto esperado
+                    $stmt = $pdo->prepare("
+                        SELECT 
+                            SUM(CASE WHEN tipo IN ('inicial', 'ingreso', 'venta') THEN monto ELSE 0 END) -
+                            SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as esperado
+                        FROM movimientos_caja 
+                        WHERE turno_id = ?
+                    ");
+                    $stmt->execute([$turnoAbierto['id']]);
+                    $montoEsperado = floatval($stmt->fetchColumn());
+
+                    $diferencia = $montoFinal - $montoEsperado;
+
+                    // Cerrar turno
+                    $stmt = $pdo->prepare("UPDATE turnos_caja SET fecha_cierre = NOW(), monto_final = ?, monto_esperado = ?, diferencia = ?, estado = 'cerrado', notas_cierre = ? WHERE id = ?");
+                    $stmt->execute([$montoFinal, $montoEsperado, $diferencia, $notasCierre, $turnoAbierto['id']]);
+
+                    $message = 'Turno cerrado. Esperado: $' . number_format($montoEsperado, 2) . ' | Real: $' . number_format($montoFinal, 2) . ' | Diferencia: $' . number_format($diferencia, 2);
+                    $messageType = $diferencia == 0 ? 'success' : 'warning';
+                }
+            } elseif (isset($_POST['agregar_movimiento'])) {
+                $turnoAbierto = $pdo->query("SELECT id FROM turnos_caja WHERE estado = 'abierto'")->fetch();
+                if (!$turnoAbierto) {
+                    $message = 'No hay turno abierto. Abre un turno primero.';
+                    $messageType = 'error';
+                } else {
+                    $tipo = $_POST['tipo'];
+                    $monto = floatval($_POST['monto']);
+                    $descripcion = sanitize($_POST['descripcion']);
+
+                    if (!in_array($tipo, ['ingreso', 'egreso']) || $monto <= 0 || empty($descripcion)) {
+                        $message = 'Datos inválidos.';
+                        $messageType = 'error';
+                    } else {
+                        $stmt = $pdo->prepare("INSERT INTO movimientos_caja (turno_id, tipo, monto, descripcion, fecha, usuario_id) VALUES (?, ?, ?, ?, NOW(), ?)");
+                        $stmt->execute([$turnoAbierto['id'], $tipo, $monto, $descripcion, $userId]);
+
+                        $message = ucfirst($tipo) . ' registrado: $' . number_format($monto, 2);
+                        $messageType = 'success';
+                    }
+                }
+            }
+        } catch (PDOException $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $message = 'Error: ' . $e->getMessage();
+            $messageType = 'error';
+        }
+    }
+}
+
+// Obtener turno actual
+$turnoActual = $pdo->query("SELECT * FROM turnos_caja WHERE estado = 'abierto'")->fetch();
+
+// Obtener movimientos del turno actual
+$movimientosActuales = [];
+$totalActual = 0;
+if ($turnoActual) {
+    $stmt = $pdo->prepare("SELECT * FROM movimientos_caja WHERE turno_id = ? ORDER BY fecha DESC");
+    $stmt->execute([$turnoActual['id']]);
+    $movimientosActuales = $stmt->fetchAll();
+
+    // Calcular total
+    $stmt = $pdo->prepare("
+        SELECT 
+            SUM(CASE WHEN tipo IN ('inicial', 'ingreso', 'venta') THEN monto ELSE 0 END) -
+            SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as total
+        FROM movimientos_caja 
+        WHERE turno_id = ?
+    ");
+    $stmt->execute([$turnoActual['id']]);
+    $totalActual = floatval($stmt->fetchColumn());
+}
+
+// Obtener historial de turnos
+$historial = $pdo->query("
+    SELECT t.*, u.nombre as usuario_nombre 
+    FROM turnos_caja t 
+    LEFT JOIN usuarios u ON t.usuario_id = u.id 
+    ORDER BY t.fecha_apertura DESC 
+    LIMIT 10
+")->fetchAll();
+?>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Caja - <?php echo APP_NAME; ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+    <!-- Navegación -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-store text-2xl"></i>
+                    <span class="text-xl font-bold"><?php echo APP_NAME; ?></span>
+                </div>
+
+                <div class="flex space-x-6">
+                    <a href="dashboard.php" class="hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded transition">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </a>
+                    <a href="products.php" class="hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded transition">
+                        <i class="fas fa-box mr-2"></i>Productos
+                    </a>
+                    <a href="sales.php" class="hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded transition">
+                        <i class="fas fa-shopping-cart mr-2"></i>Ventas
+                    </a>
+                    <a href="cash.php"
+                        class="hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded transition font-semibold">
+                        <i class="fas fa-cash-register mr-2"></i>Caja
+                    </a>
+                    <a href="reports.php" class="hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded transition">
+                        <i class="fas fa-chart-bar mr-2"></i>Reportes
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">
+                        <i class="fas fa-user-circle mr-2"></i><?php echo htmlspecialchars($userName); ?>
+                    </span>
+                    <a href="logout.php" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Título -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-cash-register text-purple-600 mr-3"></i>Gestión de Caja
+            </h1>
+            <p class="text-gray-600">Control de turnos, movimientos y arqueos de caja</p>
+        </div>
+
+        <!-- Mensajes -->
+        <?php if ($message): ?>
+            <div
+                class="mb-6 p-4 rounded-lg <?php echo $messageType == 'success' ? 'bg-green-100 border-green-400 text-green-700' : ($messageType == 'warning' ? 'bg-yellow-100 border-yellow-400 text-yellow-700' : 'bg-red-100 border-red-400 text-red-700'); ?> border-l-4">
+                <i
+                    class="fas <?php echo $messageType == 'success' ? 'fa-check-circle' : ($messageType == 'warning' ? 'fa-exclamation-triangle' : 'fa-times-circle'); ?> mr-2"></i>
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Estado del Turno Actual -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <?php if ($turnoActual): ?>
+                <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Estado</p>
+                            <p class="text-3xl font-bold">TURNO ABIERTO</p>
+                        </div>
+                        <i class="fas fa-door-open text-5xl opacity-30"></i>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Monto Inicial</p>
+                            <p class="text-3xl font-bold">$<?php echo number_format($turnoActual['monto_inicial'], 2); ?>
+                            </p>
+                        </div>
+                        <i class="fas fa-coins text-5xl opacity-30"></i>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Total Actual</p>
+                            <p class="text-3xl font-bold">$<?php echo number_format($totalActual, 2); ?></p>
+                        </div>
+                        <i class="fas fa-wallet text-5xl opacity-30"></i>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="col-span-3 bg-gradient-to-br from-gray-500 to-gray-600 text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-door-closed text-4xl mr-4"></i>
+                        <div>
+                            <p class="text-2xl font-bold">No hay turno abierto</p>
+                            <p class="text-sm opacity-90">Abre un nuevo turno para comenzar</p>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Panel Izquierdo: Acciones -->
+            <div class="space-y-6">
+                <?php if (!$turnoActual): ?>
+                    <!-- Abrir Turno -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-green-700">
+                            <i class="fas fa-door-open mr-2"></i>Abrir Turno
+                        </h3>
+                        <form method="POST" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Monto Inicial *</label>
+                                <input type="number" name="monto_inicial" step="0.01" min="0" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Notas (opcional)</label>
+                                <textarea name="notas_apertura" rows="2"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+                            </div>
+                            <button type="submit" name="abrir_turno"
+                                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                                <i class="fas fa-door-open mr-2"></i>Abrir Turno
+                            </button>
+                        </form>
+                    </div>
+                <?php else: ?>
+                    <!-- Agregar Movimiento -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-blue-700">
+                            <i class="fas fa-exchange-alt mr-2"></i>Registrar Movimiento
+                        </h3>
+                        <form method="POST" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo *</label>
+                                <select name="tipo" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="ingreso">Ingreso</option>
+                                    <option value="egreso">Egreso</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Monto *</label>
+                                <input type="number" name="monto" step="0.01" min="0.01" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Descripción *</label>
+                                <input type="text" name="descripcion" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Ej: Pago a proveedor, Cobro de deuda">
+                            </div>
+                            <button type="submit" name="agregar_movimiento"
+                                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                                <i class="fas fa-plus mr-2"></i>Agregar Movimiento
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Cerrar Turno -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-red-700">
+                            <i class="fas fa-door-closed mr-2"></i>Cerrar Turno
+                        </h3>
+                        <form method="POST" class="space-y-4"
+                            onsubmit="return confirm('¿Estás seguro de cerrar el turno?');">
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <div class="bg-purple-50 p-4 rounded-lg mb-4">
+                                <p class="text-sm text-gray-700"><strong>Monto Esperado:</strong>
+                                    $<?php echo number_format($totalActual, 2); ?></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Monto Real Contado *</label>
+                                <input type="number" name="monto_final" step="0.01" min="0" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Notas de Cierre
+                                    (opcional)</label>
+                                <textarea name="notas_cierre" rows="2"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
+                            </div>
+                            <button type="submit" name="cerrar_turno"
+                                class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                                <i class="fas fa-door-closed mr-2"></i>Cerrar Turno y Arquear
+                            </button>
+                        </form>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Panel Derecho: Movimientos y Historial -->
+            <div class="space-y-6">
+                <?php if ($turnoActual && !empty($movimientosActuales)): ?>
+                    <!-- Movimientos del Turno Actual -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">
+                            <i class="fas fa-list mr-2 text-purple-600"></i>Movimientos del Turno
+                        </h3>
+                        <div class="space-y-2 max-h-96 overflow-y-auto">
+                            <?php foreach ($movimientosActuales as $mov): ?>
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-800">
+                                            <i
+                                                class="fas <?php echo $mov['tipo'] == 'egreso' ? 'fa-arrow-down text-red-500' : 'fa-arrow-up text-green-500'; ?> mr-2"></i>
+                                            <?php echo htmlspecialchars($mov['descripcion']); ?>
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            <?php echo date('d/m/Y H:i', strtotime($mov['fecha'])); ?>
+                                        </p>
+                                    </div>
+                                    <span
+                                        class="font-bold <?php echo $mov['tipo'] == 'egreso' ? 'text-red-600' : 'text-green-600'; ?>">
+                                        <?php echo $mov['tipo'] == 'egreso' ? '-' : '+'; ?>$<?php echo number_format($mov['monto'], 2); ?>
+                                    </span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Historial de Turnos -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-history mr-2 text-orange-600"></i>Historial de Turnos
+                    </h3>
+                    <?php if (empty($historial)): ?>
+                        <p class="text-gray-500 text-center py-8">No hay turnos registrados</p>
+                    <?php else: ?>
+                        <div class="space-y-2 max-h-96 overflow-y-auto">
+                            <?php foreach ($historial as $turno): ?>
+                                <div class="p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-semibold text-gray-800">
+                                            <?php echo htmlspecialchars($turno['usuario_nombre']); ?>
+                                        </span>
+                                        <span
+                                            class="px-2 py-1 rounded text-xs font-bold <?php echo $turno['estado'] == 'abierto' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'; ?>">
+                                            <?php echo strtoupper($turno['estado']); ?>
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-600">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        <?php echo date('d/m/Y H:i', strtotime($turno['fecha_apertura'])); ?>
+                                        <?php if ($turno['fecha_cierre']): ?>
+                                            - <?php echo date('H:i', strtotime($turno['fecha_cierre'])); ?>
+                                        <?php endif; ?>
+                                    </p>
+                                    <?php if ($turno['estado'] == 'cerrado'): ?>
+                                        <div class="mt-2 text-xs">
+                                            <span class="text-gray-600">Esperado:
+                                                $<?php echo number_format($turno['monto_esperado'], 2); ?></span> |
+                                            <span class="text-gray-600">Real:
+                                                $<?php echo number_format($turno['monto_final'], 2); ?></span> |
+                                            <span
+                                                class="<?php echo $turno['diferencia'] == 0 ? 'text-green-600' : ($turno['diferencia'] > 0 ? 'text-blue-600' : 'text-red-600'); ?>">
+                                                Dif: $<?php echo number_format($turno['diferencia'], 2); ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

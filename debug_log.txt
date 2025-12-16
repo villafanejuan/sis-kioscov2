@@ -1,0 +1,18 @@
+POST Received: Array
+(
+    [ajax] => 1
+    [csrf_token] => 7563682fc85575c9e1cc466a0bbe6beb2d8c2fa45407eab957fe47d78b461440
+    [scan_barcode] => 1
+    [barcode] => 123123
+)
+
+Scanning Barcode: 123123
+POST Received: Array
+(
+    [ajax] => 1
+    [csrf_token] => 7563682fc85575c9e1cc466a0bbe6beb2d8c2fa45407eab957fe47d78b461440
+    [add_to_cart] => 1
+    [producto_id] => 2
+    [cantidad] => 1
+)
+

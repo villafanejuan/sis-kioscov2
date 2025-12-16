@@ -1,0 +1,44 @@
+# Ignorar archivos de entorno
+.env
+.env.local
+.env.production
+
+# Ignorar logs
+storage/logs/*.log
+!storage/logs/.gitkeep
+
+# Ignorar caché
+storage/cache/*
+!storage/cache/.gitkeep
+
+# Ignorar backups
+database/backups/*
+!database/backups/.gitkeep
+
+# Ignorar uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Ignorar archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignorar archivos de IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignorar archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Ignorar vendor si se usa Composer
+vendor/
+
+# Ignorar node_modules si se usa npm
+node_modules/
