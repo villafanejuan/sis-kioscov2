@@ -309,7 +309,7 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
         </div>
 
         <div class="center" style="font-size: 9px; margin-top: 10px;">
-            Sistema: <?php echo APP_NAME; ?>
+            Documento no valido como factura.
         </div>
     </div>
 
