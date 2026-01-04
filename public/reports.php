@@ -32,14 +32,7 @@ if ($isAdmin || $userRole === 'cajero') {
     $users = [];
 }
 
-// 1. Estadísticas generales (Complejas con Union/Subquery)
-// Calculamos Totales sumando ambas fuentes
-// Total Ventas = Count(Ventas)
-// Valor Total Venta = Sum(Ventas.total)
-// Efectivo Recibido = Sum(LEAST(Ventas.total, Ventas.monto_pagado)) + Sum(ClientePagos.monto)
-// Fiado = Sum(Ventas.deuda)
-
-// Prepare stats params (Need to double params because we use them twice if filter is active)
+// 1. Estadísticas generales
 $statsParams = array_merge($params, $params);
 
 $sqlStatsVentas = "SELECT 
@@ -53,7 +46,7 @@ $sqlStatsPagos = "SELECT
                     COALESCE(SUM(monto), 0) as cash_debt
                   FROM cliente_pagos cp $whereClausePagos";
 
-// Execute separately for clarity/safety
+// Execute separately
 $stmtV = $pdo->prepare($sqlStatsVentas);
 $stmtV->execute($params);
 $resV = $stmtV->fetch();
@@ -62,24 +55,40 @@ $stmtP = $pdo->prepare($sqlStatsPagos);
 $stmtP->execute($params);
 $resP = $stmtP->fetch();
 
-$stats = [
-    'total_ventas' => $resV['cnt'],
-    'total_valor' => $resV['val'], // Facturado
-    'dinero_caja' => $resV['cash'] + $resP['cash_debt'], // Cash from Sales + Cash from Debt
-    'credito_otorgado' => $resV['credit'],
-    'debt_collected' => $resP['cash_debt']
-];
-
-
-// 2. Ventas Semanales (Solo Ventas volumen)
-$dateCondition = "fecha >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)";
-// Fix where clause for helper
+// Calculate Transfers Total (To subtract from Cash and show separately)
+// Helper to prepend where
 function prependWhere($clause, $extra)
 {
     if (empty($clause))
         return "WHERE " . $extra;
     return $clause . " AND " . $extra;
 }
+
+$paramTransfer = $params;
+$sqlStatsTransfer = "SELECT 
+                        COALESCE(SUM(vp.monto), 0) as total_trans
+                     FROM venta_pagos vp
+                     JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id
+                     JOIN ventas v ON vp.venta_id = v.id 
+                     $whereClauseVentas 
+                     AND mp.nombre = 'Transferencia'";
+
+$stmtT = $pdo->prepare($sqlStatsTransfer);
+$stmtT->execute($paramTransfer);
+$resT = $stmtT->fetch();
+$total_transfer = $resT['total_trans'];
+
+$stats = [
+    'total_ventas' => $resV['cnt'],
+    'total_valor' => $resV['val'], // Facturado
+    'dinero_caja' => ($resV['cash'] + $resP['cash_debt']) - $total_transfer, // Adjust Cash to be REAL PHYSICAL CASH
+    'total_transfer' => $total_transfer,
+    'credito_otorgado' => $resV['credit'],
+    'debt_collected' => $resP['cash_debt']
+];
+
+// 2. Ventas Semanales (Solo Ventas volumen)
+$dateCondition = "fecha >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)";
 
 $weeklyWhere = prependWhere($whereClauseVentas, $dateCondition);
 $sql = "SELECT DATE(fecha) as fecha, COUNT(*) as cantidad, SUM(total) as total 
@@ -115,42 +124,12 @@ $productos_mas_vendidos = $stmt->fetchAll();
     <script src="assets/js/tailwindcss.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
     <style>
-        .badge {
-            display: inline-block;
-            padding: 0.25em 0.4em;
-            font-size: 75%;
-            font-weight: 700;
-            line-height: 1;
-            text-align: center;
-            white-space: nowrap;
-            vertical-align: baseline;
-            border-radius: 0.25rem;
-        }
-
-        .badge-success {
-            color: #fff;
-            background-color: #28a745;
-        }
-
-        .badge-warning {
-            color: #212529;
-            background-color: #ffc107;
-        }
-
-        .badge-danger {
-            color: #fff;
-            background-color: #dc3545;
-        }
-
-        .badge-info {
-            color: #fff;
-            background-color: #17a2b8;
-        }
-
-        .badge-primary {
-            color: #fff;
-            background-color: #007bff;
-        }
+        .badge { display: inline-block; padding: 0.25em 0.4em; font-size: 75%; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; }
+        .badge-success { color: #fff; background-color: #28a745; }
+        .badge-warning { color: #212529; background-color: #ffc107; }
+        .badge-danger { color: #fff; background-color: #dc3545; }
+        .badge-info { color: #fff; background-color: #17a2b8; }
+        .badge-primary { color: #fff; background-color: #007bff; }
     </style>
 </head>
 
@@ -164,86 +143,100 @@ $productos_mas_vendidos = $stmt->fetchAll();
             </h1>
 
             <?php if ($isAdmin || $userRole === 'cajero'): ?>
-                <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
-                    <form method="GET" class="flex items-center gap-2">
-                        <label for="user_filter" class="text-sm font-medium text-gray-700">Filtrar por:</label>
-                        <select name="user_filter" id="user_filter" onchange="this.form.submit()"
-                            class="border-gray-300 rounded-md shadow-sm text-sm py-1">
-                            <option value="all" <?php echo (!isset($_GET['user_filter']) || $_GET['user_filter'] === 'all') ? 'selected' : ''; ?>>
-                                📊 General (Todos)
-                            </option>
-                            <option value="<?php echo $_SESSION['user_id']; ?>" <?php echo (isset($_GET['user_filter']) && $_GET['user_filter'] == $_SESSION['user_id']) ? 'selected' : ''; ?>>
-                                👤 Mi Usuario
-                            </option>
-                            <optgroup label="Usuarios">
-                                <?php foreach ($users as $u): ?>
-                                    <?php if ($u['id'] != $_SESSION['user_id']): ?>
-                                        <option value="<?php echo $u['id']; ?>" <?php echo (isset($_GET['user_filter']) && $_GET['user_filter'] == $u['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($u['nombre'] ?? $u['username']); ?>
-                                        </option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </optgroup>
-                        </select>
-                    </form>
-                </div>
+                    <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                        <form method="GET" class="flex items-center gap-2">
+                            <label for="user_filter" class="text-sm font-medium text-gray-700">Filtrar por:</label>
+                            <select name="user_filter" id="user_filter" onchange="this.form.submit()"
+                                class="border-gray-300 rounded-md shadow-sm text-sm py-1">
+                                <option value="all" <?php echo (!isset($_GET['user_filter']) || $_GET['user_filter'] === 'all') ? 'selected' : ''; ?>>
+                                    📊 General (Todos)
+                                </option>
+                                <option value="<?php echo $_SESSION['user_id']; ?>" <?php echo (isset($_GET['user_filter']) && $_GET['user_filter'] == $_SESSION['user_id']) ? 'selected' : ''; ?>>
+                                    👤 Mi Usuario
+                                </option>
+                                <optgroup label="Usuarios">
+                                    <?php foreach ($users as $u): ?>
+                                            <?php if ($u['id'] != $_SESSION['user_id']): ?>
+                                                    <option value="<?php echo $u['id']; ?>" <?php echo (isset($_GET['user_filter']) && $_GET['user_filter'] == $u['id']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($u['nombre'] ?? $u['username']); ?>
+                                                    </option>
+                                            <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                            </select>
+                        </form>
+                    </div>
             <?php endif; ?>
         </div>
 
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <!-- Total Ventas -->
-            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-blue-500">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium uppercase">Ventas (Cant)</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1">
+                        <p class="text-gray-500 text-xs font-medium uppercase">Ventas (Cant)</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">
                             <?php echo number_format($stats['total_ventas']); ?></h3>
                     </div>
-                    <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-shopping-cart text-xl"></i>
+                    <div class="p-2 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-shopping-cart text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Total Facturado -->
-            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-green-500">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium uppercase">Total Facturado</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1">
+                        <p class="text-gray-500 text-xs font-medium uppercase">Total Facturado</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">
                             $<?php echo number_format($stats['total_valor'], 2); ?></h3>
                         <p class="text-xs text-gray-400 mt-1">Valor mercancía vendida</p>
                     </div>
-                    <div class="p-3 bg-green-100 rounded-full text-green-600"><i
-                            class="fas fa-file-invoice-dollar text-xl"></i></div>
+                    <div class="p-2 bg-green-100 rounded-full text-green-600"><i
+                            class="fas fa-file-invoice-dollar text-lg"></i></div>
                 </div>
             </div>
 
-            <!-- Dinero Recibido (Caja) -->
-            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-teal-500">
+            <!-- Efectivo (Caja) -->
+            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-teal-500">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium uppercase">Efectivo Ingresado</p>
-                        <h3 class="text-3xl font-bold text-teal-700 mt-1">
+                        <p class="text-gray-500 text-xs font-medium uppercase">Efectivo Físico</p>
+                        <h3 class="text-2xl font-bold text-teal-700 mt-1">
                             $<?php echo number_format($stats['dinero_caja'], 2); ?></h3>
-                        <p class="text-xs text-gray-400 mt-1">Ventas Contado + Abonos</p>
+                        <p class="text-xs text-gray-400 mt-1">En mano</p>
                     </div>
-                    <div class="p-3 bg-teal-100 rounded-full text-teal-600"><i class="fas fa-cash-register text-xl"></i>
+                    <div class="p-2 bg-teal-100 rounded-full text-teal-600"><i class="fas fa-cash-register text-lg"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transferencias -->
+            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-purple-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-500 text-xs font-medium uppercase">Transferencias</p>
+                        <h3 class="text-2xl font-bold text-purple-700 mt-1">
+                            $<?php echo number_format($stats['total_transfer'], 2); ?></h3>
+                        <p class="text-xs text-gray-400 mt-1">Digital</p>
+                    </div>
+                    <div class="p-2 bg-purple-100 rounded-full text-purple-600"><i class="fas fa-mobile-alt text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Crédito Otorgado (Fiado) -->
-            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-red-500">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium uppercase">Fiado Pendiente</p>
-                        <h3 class="text-3xl font-bold text-red-600 mt-1">
+                        <p class="text-gray-500 text-xs font-medium uppercase">Fiado Pendiente</p>
+                        <h3 class="text-2xl font-bold text-red-600 mt-1">
                             $<?php echo number_format($stats['credito_otorgado'], 2); ?></h3>
-                        <p class="text-xs text-gray-400 mt-1">Crédito otorgado (No cobrado)</p>
+                        <p class="text-xs text-gray-400 mt-1">Crédito otorgado</p>
                     </div>
-                    <div class="p-3 bg-red-100 rounded-full text-red-600"><i
-                            class="fas fa-hand-holding-usd text-xl"></i></div>
+                    <div class="p-2 bg-red-100 rounded-full text-red-600"><i
+                            class="fas fa-hand-holding-usd text-lg"></i></div>
                 </div>
             </div>
         </div>
@@ -258,8 +251,6 @@ $productos_mas_vendidos = $stmt->fetchAll();
         $dateWhereP = "";
         $dateParams = [];
 
-        // Logic to build date condition based on 'v.fecha' or 'cp.fecha'
-        // We will inject the condition string into the UNION queries
         if ($period === 'custom' && !empty($dateFrom) && !empty($dateTo)) {
             $dateWhereV = "AND DATE(v.fecha) BETWEEN ? AND ?";
             $dateWhereP = "AND DATE(cp.fecha) BETWEEN ? AND ?";
@@ -286,22 +277,10 @@ $productos_mas_vendidos = $stmt->fetchAll();
                     break;
                 case 'all':
                 default:
-                    // No date filter
                     break;
             }
         }
 
-        // UNION Query
-        // Part 1: Ventas
-        // Part 2: Pagos
-        // Columns: ID, Fecha, Usuario, Detalle, Tipo('venta','pago'), Total, Pagado, Deuda
-        
-        // Params Strategy: We have specific params needed for each part + combined for the whole?
-        // Actually, we must bind params in Order.
-        // Query 1: params (users) + dateParams
-        // Query 2: params (users) + dateParams
-        // Overall Order: [UserParamsV], [DateParamsV], [UserParamsP], [DateParamsP]
-        
         $finalParams = array_merge($params, $dateParams, $params, $dateParams);
 
         $sql_union = "
@@ -313,7 +292,9 @@ $productos_mas_vendidos = $stmt->fetchAll();
             'venta' as tipo,
             v.total as total_ft,
             LEAST(v.total, v.monto_pagado) as pagado,
-            (CASE WHEN v.total > v.monto_pagado THEN v.total - v.monto_pagado ELSE 0 END) as deuda
+            (CASE WHEN v.total > v.monto_pagado THEN v.total - v.monto_pagado ELSE 0 END) as deuda,
+            (SELECT GROUP_CONCAT(mp.nombre SEPARATOR ', ') FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id) as metodo,
+            (SELECT referencia FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id AND mp.requiere_referencia = 1 LIMIT 1) as referencia
         FROM ventas v
         LEFT JOIN usuarios u ON v.usuario_id = u.id
         JOIN venta_detalles vd ON v.id = vd.venta_id
@@ -331,7 +312,9 @@ $productos_mas_vendidos = $stmt->fetchAll();
             'pago' as tipo,
             0 as total_ft,
             cp.monto as pagado,
-            0 as deuda
+            0 as deuda,
+            'Efectivo' as metodo,
+            NULL as referencia
         FROM cliente_pagos cp
         LEFT JOIN usuarios u ON cp.usuario_id = u.id
         JOIN clientes c ON cp.cliente_id = c.id
@@ -366,8 +349,8 @@ $productos_mas_vendidos = $stmt->fetchAll();
                 <!-- Filter Form -->
                 <form method="GET" class="flex flex-wrap items-center gap-2" id="periodForm">
                     <?php if (isset($_GET['user_filter'])): ?>
-                        <input type="hidden" name="user_filter"
-                            value="<?php echo htmlspecialchars($_GET['user_filter']); ?>">
+                            <input type="hidden" name="user_filter"
+                                value="<?php echo htmlspecialchars($_GET['user_filter']); ?>">
                     <?php endif; ?>
                     <select name="period" id="period" onchange="toggleDateInputs()"
                         class="border-gray-300 rounded text-sm py-1">
@@ -381,7 +364,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
                     <div id="customDateInputs" class="flex items-center gap-2"
                         style="display: <?php echo $period === 'custom' ? 'flex' : 'none'; ?>;">
                         <input type="date" name="date_from" value="<?php echo htmlspecialchars($dateFrom); ?>"
-                            class="hidden"> <!-- simplified for brevity -->
+                            class="hidden">
                         <span class="text-xs text-gray-500">(Usar filtros arriba)</span>
                     </div>
                 </form>
@@ -409,9 +392,10 @@ $productos_mas_vendidos = $stmt->fetchAll();
                             <th class="px-3 py-2 text-left">Tipo</th>
                             <th class="px-3 py-2 text-left">Fecha</th>
                             <th class="px-3 py-2 text-left">Detalle / Productos</th>
+                            <th class="px-3 py-2 text-left">Método</th>
                             <th class="px-3 py-2 text-right">Facturado</th>
-                            <th class="px-3 py-2 text-right text-teal-700">Ingreso Caja</th>
-                            <th class="px-3 py-2 text-right text-red-600">Deuda Gen.</th>
+                            <th class="px-3 py-2 text-right text-teal-700">Ingreso</th>
+                            <th class="px-3 py-2 text-right text-red-600">Deuda</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
@@ -429,27 +413,35 @@ $productos_mas_vendidos = $stmt->fetchAll();
                             }
 
                             $rowClass = $isPago ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50';
+
+                            $metodoDisplay = htmlspecialchars($t['metodo'] ?? '-');
+                            if (!empty($t['referencia'])) {
+                                $metodoDisplay .= ' <span class="text-xs text-gray-500">Ref: ' . htmlspecialchars($t['referencia']) . '</span>';
+                            }
                             ?>
-                            <tr class="<?php echo $rowClass; ?>">
-                                <td class="px-3 py-2 text-center"><?php echo $badge; ?></td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <?php echo date('d/m/y H:i', strtotime($t['fecha'])); ?></td>
-                                <td class="px-3 py-2 text-xs truncate max-w-xs"
-                                    title="<?php echo htmlspecialchars($t['detalle']); ?>">
-                                    <?php echo htmlspecialchars($t['detalle']); ?>
-                                </td>
-                                <td class="px-3 py-2 text-right font-bold">
-                                    <?php echo ($t['total_ft'] > 0) ? '$' . number_format($t['total_ft'], 2) : '-'; ?></td>
-                                <td class="px-3 py-2 text-right text-teal-700 font-bold">
-                                    <?php echo ($t['pagado'] > 0) ? '$' . number_format($t['pagado'], 2) : '-'; ?></td>
-                                <td class="px-3 py-2 text-right text-red-600 font-bold">
-                                    <?php echo ($t['deuda'] > 0) ? '$' . number_format($t['deuda'], 2) : '-'; ?></td>
-                            </tr>
+                                <tr class="<?php echo $rowClass; ?>">
+                                    <td class="px-3 py-2 text-center"><?php echo $badge; ?></td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <?php echo date('d/m/y H:i', strtotime($t['fecha'])); ?></td>
+                                    <td class="px-3 py-2 text-xs truncate max-w-xs"
+                                        title="<?php echo htmlspecialchars($t['detalle']); ?>">
+                                        <?php echo htmlspecialchars($t['detalle']); ?>
+                                    </td>
+                                    <td class="px-3 py-2 text-xs">
+                                        <?php echo $metodoDisplay; ?>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold">
+                                        <?php echo ($t['total_ft'] > 0) ? '$' . number_format($t['total_ft'], 2) : '-'; ?></td>
+                                    <td class="px-3 py-2 text-right text-teal-700 font-bold">
+                                        <?php echo ($t['pagado'] > 0) ? '$' . number_format($t['pagado'], 2) : '-'; ?></td>
+                                    <td class="px-3 py-2 text-right text-red-600 font-bold">
+                                        <?php echo ($t['deuda'] > 0) ? '$' . number_format($t['deuda'], 2) : '-'; ?></td>
+                                </tr>
                         <?php endforeach; ?>
                     </tbody>
                     <tfoot class="bg-gray-100 font-bold">
                         <tr>
-                            <td colspan="3" class="px-3 py-2 text-right">TOTALES:</td>
+                            <td colspan="4" class="px-3 py-2 text-right">TOTALES:</td>
                             <td class="px-3 py-2 text-right">$<?php echo number_format($ft_total_facturado, 2); ?></td>
                             <td class="px-3 py-2 text-right text-teal-700">
                                 $<?php echo number_format($ft_total_cash, 2); ?></td>

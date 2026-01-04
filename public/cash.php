@@ -56,15 +56,29 @@ if (isset($_GET['action']) && $_GET['action'] == 'get_shift_details' && isset($_
         $stmt->execute([$_GET['id']]);
         $turno = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Calcular Ventas Cta Cte del turno (Monto 0 en movimientos, pero suma real en ventas)
+        // Calcular Ventas Cta Cte (Credits) - Suma de Pagos con Metodo 'Cuenta Corriente'
         $stmtCC = $pdo->prepare("
-            SELECT SUM(v.total) 
-            FROM ventas v 
+            SELECT SUM(vp.monto) 
+            FROM venta_pagos vp 
+            JOIN ventas v ON vp.venta_id = v.id
             JOIN movimientos_caja m ON v.id = m.venta_id 
-            WHERE m.turno_id = ? AND m.tipo = 'venta' AND m.monto = 0
+            WHERE m.turno_id = ? AND m.tipo = 'venta' 
+            AND vp.metodo_pago_id = (SELECT id FROM metodos_pago WHERE nombre = 'Cuenta Corriente' LIMIT 1)
         ");
         $stmtCC->execute([$_GET['id']]);
         $totalCC = $stmtCC->fetchColumn() ?: 0;
+
+        // Calcular Ventas Transferencia
+        $stmtTrans = $pdo->prepare("
+             SELECT SUM(vp.monto)
+             FROM venta_pagos vp
+             JOIN ventas v ON vp.venta_id = v.id
+             JOIN movimientos_caja m ON v.id = m.venta_id
+             WHERE m.turno_id = ? AND m.tipo = 'venta'
+             AND vp.metodo_pago_id = (SELECT id FROM metodos_pago WHERE nombre = 'Transferencia' LIMIT 1)
+        ");
+        $stmtTrans->execute([$_GET['id']]);
+        $totalTrans = $stmtTrans->fetchColumn() ?: 0;
 
         // Calcular Pagos (Cobros) recibidos en el turno
         $stmtPagos = $pdo->prepare("SELECT SUM(monto) FROM cliente_pagos WHERE turno_id = ?");
@@ -76,6 +90,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'get_shift_details' && isset($_
             'movimientos' => $movimientos,
             'turno' => $turno,
             'credit_sales_total' => $totalCC,
+            'transfer_sales_total' => $totalTrans,
             'debt_collections_total' => $totalPagos
         ]);
     } catch (Exception $e) {
@@ -816,6 +831,10 @@ if ($isAuditor) {
                                     <span class="font-medium text-purple-600" id="modalVentasCC"></span>
                                 </div>
                                 <div class="flex justify-between items-center border-b border-gray-200 pb-1">
+                                    <span class="text-gray-600">Total Transferencias:</span>
+                                    <span class="font-medium text-blue-600" id="modalVentasTransfer"></span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-gray-200 pb-1">
                                     <span class="text-gray-600">Total Cobros Deuda (Entrada):</span>
                                     <span class="font-medium text-green-600" id="modalCobrosCC"></span>
                                 </div>
@@ -966,6 +985,7 @@ if ($isAuditor) {
                             document.getElementById('modalEgresos').textContent = `-$${egresos.toFixed(2)}`;
                             document.getElementById('modalEgresos').textContent = `-$${egresos.toFixed(2)}`;
                             document.getElementById('modalVentasCC').textContent = `$${parseFloat(data.credit_sales_total || 0).toFixed(2)}`;
+                            document.getElementById('modalVentasTransfer').textContent = `$${parseFloat(data.transfer_sales_total || 0).toFixed(2)}`;
                             document.getElementById('modalCobrosCC').textContent = `+$${parseFloat(data.debt_collections_total || 0).toFixed(2)}`;
                             document.getElementById('modalEsperado').textContent = `$${esperado.toFixed(2)}`;
 
@@ -996,7 +1016,7 @@ if ($isAuditor) {
                         }
                     })
                     .catch(err => {
-         console.error('Error:', err);
+                        console.error('Error:', err);
                         alert('Ocurrió un error al cargar los detalles.');
                     });
             }

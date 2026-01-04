@@ -376,6 +376,58 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
 
                             $message = '<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Venta a crédito completada. Total: $' . number_format($total, 2) . '. <a href="print_ticket.php?id=' . $venta_id . '" target="_blank" class="underline font-bold">Imprimir Ticket</a> | <a href="customer_account.php?id=' . $cliente_id . '" target="_blank" class="underline font-bold">Ver Cuenta</a></div>';
                         }
+                    } elseif ($metodo_pago === 'transferencia') {
+                        $referencia = trim($_POST['transfer_reference'] ?? '');
+                        if (empty($referencia)) {
+                            $message = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">Debes ingresar el nombre del remitente para la transferencia.</div>';
+                        } else {
+                            // Venta por Transferencia / QR
+                            $amount_paid = $total; // Asumimos pago completo
+                            $change = 0;
+
+                            // Insertar venta 
+                            $stmt = $pdo->prepare("INSERT INTO ventas (usuario_id, cliente_id, subtotal, descuento_total, total, monto_pagado, cambio) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                            $stmt->execute([$_SESSION['user_id'], $cliente_id, $subtotal, $descuento_total, $total, $amount_paid, $change]);
+                            $venta_id = $pdo->lastInsertId();
+
+                            // Guardar Descuentos
+                            if (!empty($descuentos_aplicados)) {
+                                saveDiscounts($venta_id, $descuentos_aplicados);
+                            }
+
+                            // Insertar detalles
+                            foreach ($carrito as $item) {
+                                $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal) VALUES (?, ?, ?, ?, ?)");
+                                $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad']]);
+
+                                $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
+                                $stmt->execute([$item['cantidad'], $item['id']]);
+                            }
+
+                            // Registrar Pago Transferencia (ID 4 o busca por nombre)
+                            $stmt = $pdo->prepare("SELECT id FROM metodos_pago WHERE nombre = 'Transferencia' LIMIT 1");
+                            $mp = $stmt->fetch();
+                            $mp_id = $mp ? $mp['id'] : 4;
+
+                            $stmt = $pdo->prepare("INSERT INTO venta_pagos (venta_id, metodo_pago_id, monto, referencia) VALUES (?, ?, ?, ?)");
+                            $stmt->execute([$venta_id, $mp_id, $total, $referencia]);
+
+                            // Movimiento en Caja: Monto 0 para NO afectar arqueo físico, pero registrado visualmente
+                            // La descripción incluye el monto real para referencia visual
+                            if (isset($turnoAbierto) && $turnoAbierto) {
+                                $desc = "Transferencia ($" . number_format($total, 2) . ") - Ref: $referencia";
+                                // Tipo 'venta' para que salga en listados, monto 0
+                                $stmt = $pdo->prepare("INSERT INTO movimientos_caja (turno_id, tipo, monto, descripcion, venta_id, created_at, usuario_id, fecha) VALUES (?, 'venta', 0, ?, ?, NOW(), ?, NOW())");
+                                $stmt->execute([$turnoAbierto['id'], $desc, $venta_id, $_SESSION['user_id']]);
+                            }
+
+                            // Limpiar
+                            unset($_SESSION['carrito']);
+                            unset($_SESSION['selected_customer']);
+                            $carrito = [];
+
+                            $message = '<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Transferencia registrada exitosamente. <a href="print_ticket.php?id=' . $venta_id . '" target="_blank" class="underline font-bold">Imprimir Ticket</a></div>';
+                        }
                     } else {
                         // Venta en efectivo u otro método
                         if ($amount_paid < $total) {
@@ -764,9 +816,21 @@ $productos = $stmt->fetchAll();
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 onchange="togglePaymentFields()">
                                 <option value="efectivo">Efectivo</option>
+                                <option value="transferencia">Transferencia</option>
                                 <option value="cuenta_corriente" id="cuenta_corriente_option">Cuenta Corriente (Fiado)
                                 </option>
                             </select>
+
+                            <div id="transfer_details"
+                                class="hidden mt-3 p-3 bg-purple-50 rounded border border-purple-200">
+                                <label for="transfer_reference" class="block text-sm font-bold text-purple-800 mb-1">
+                                    Nombre del Remitente:
+                                </label>
+                                <input type="text" id="transfer_reference"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                    placeholder="Ej: Juan Pérez">
+                            </div>
+
                             <p class="text-xs text-gray-500 mt-1">Selecciona un cliente para habilitar "Cuenta
                                 Corriente"
                             </p>
@@ -883,18 +947,18 @@ $productos = $stmt->fetchAll();
             if (changeSpan && completeBtn) {
                 if (isCC) {
                     // Logic for Credit: Allow ANY amount >= 0
-                     const debt = total - amountPaid;
-                     if (debt > 0) {
-                         changeSpan.textContent = "Deuda Restante: $" + debt.toFixed(2);
-                         changeSpan.className = 'text-red-500 font-bold';
-                     } else {
-                         const realChange = amountPaid - total;
-                         changeSpan.textContent = "Cambio: $" + realChange.toFixed(2); // Overpayment?
-                         changeSpan.className = 'text-green-600 font-bold';
-                     }
-                     // Always Enable for CC (unless amount < 0 logic in HTML)
-                     completeBtn.disabled = false;
-                     completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    const debt = total - amountPaid;
+                    if (debt > 0) {
+                        changeSpan.textContent = "Deuda Restante: $" + debt.toFixed(2);
+                        changeSpan.className = 'text-red-500 font-bold';
+                    } else {
+                        const realChange = amountPaid - total;
+                        changeSpan.textContent = "Cambio: $" + realChange.toFixed(2); // Overpayment?
+                        changeSpan.className = 'text-green-600 font-bold';
+                    }
+                    // Always Enable for CC (unless amount < 0 logic in HTML)
+                    completeBtn.disabled = false;
+                    completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
                 } else {
                     // Logic for Cash
@@ -979,26 +1043,26 @@ $productos = $stmt->fetchAll();
 
             if (metodoPago === 'cuenta_corriente') {
                 // Mostrar campos para entrega parcial
-                if(amountSection) {
+                if (amountSection) {
                     amountSection.style.display = 'block';
                     const input = document.getElementById('amount_paid');
-                    if(input) {
-                         input.placeholder = "Monto entrega (Opcional)";
-                         input.min = 0;
+                    if (input) {
+                        input.placeholder = "Monto entrega (Opcional)";
+                        input.min = 0;
                     }
                 }
-                if(changeSection) changeSection.style.display = 'block';
-                
+                if (changeSection) changeSection.style.display = 'block';
+
                 // Recalcular para actualizar texto de deuda/cambio
                 calculateChange();
             } else {
                 // Mostrar campos de efectivo
-                if(amountSection) {
+                if (amountSection) {
                     amountSection.style.display = 'block';
                     const input = document.getElementById('amount_paid');
-                     if(input) input.min = currentTotal;
+                    if (input) input.min = currentTotal;
                 }
-                if(changeSection) changeSection.style.display = 'block';
+                if (changeSection) changeSection.style.display = 'block';
                 // Recalcular cambio
                 calculateChange();
             }
@@ -1119,6 +1183,7 @@ $productos = $stmt->fetchAll();
                         <input type="hidden" name="csrf_token" value="${csrfToken}">
                         <input type="hidden" name="cliente_id" id="hidden_cliente_id" value="">
                         <input type="hidden" name="metodo_pago" id="hidden_metodo_pago" value="efectivo">
+                        <input type="hidden" name="transfer_reference" id="hidden_transfer_reference" value="">
                         <div>
                             <label for="amount_paid" class="block text-sm font-medium text-gray-700 mb-1">Monto Pagado</label>
                             <div class="relative">
@@ -1163,11 +1228,22 @@ $productos = $stmt->fetchAll();
             // Sync Hidden Fields from Persistent Selects (Essential to persistence across cart updates)
             const methodSelect = document.getElementById('metodo_pago');
             const clientSelect = document.getElementById('cliente_id');
+            const transferRefInput = document.getElementById('transfer_reference');
+
             const hiddenMethod = document.getElementById('hidden_metodo_pago');
             const hiddenClient = document.getElementById('hidden_cliente_id');
+            const hiddenTransferRef = document.getElementById('hidden_transfer_reference');
 
             if (methodSelect && hiddenMethod) hiddenMethod.value = methodSelect.value;
             if (clientSelect && hiddenClient) hiddenClient.value = clientSelect.value;
+            if (transferRefInput && hiddenTransferRef) hiddenTransferRef.value = transferRefInput.value;
+
+            // Add listener to Sync Transfer Reference
+            if (transferRefInput && hiddenTransferRef) {
+                transferRefInput.addEventListener('input', function () {
+                    hiddenTransferRef.value = this.value;
+                });
+            }
 
             if (amountPaidEl) {
                 // Determine Minimum Payment based on Method
@@ -1189,18 +1265,32 @@ $productos = $stmt->fetchAll();
                 // Remove old listener to avoid dupes? HTML inputs usually static.
                 // Ideally this change should be in global scope, but here ensures it works on redraw.
                 methodSelect.onchange = function () {
+                    togglePaymentFields(); // Ensure UI toggle
                     if (hiddenMethod) hiddenMethod.value = this.value;
                     if (amountPaidEl) {
                         if (this.value === 'cuenta_corriente') {
                             amountPaidEl.min = 0;
+                            amountPaidEl.placeholder = "Entrega parcial";
                         } else {
                             amountPaidEl.min = currentTotal;
-                            // Auto-fill if switching back to cash?
-                            // amountPaidEl.value = currentTotal.toFixed(2); 
+                            amountPaidEl.placeholder = currentTotal.toFixed(2);
                         }
                         calculateChange();
                     }
                 };
+            }
+        }
+
+        // Función para mostrar opciones de transferencia
+        function togglePaymentFields() {
+            const select = document.getElementById('metodo_pago');
+            const transferDetails = document.getElementById('transfer_details');
+            if (select && transferDetails) {
+                if (select.value === 'transferencia') {
+                    transferDetails.classList.remove('hidden');
+                } else {
+                    transferDetails.classList.add('hidden');
+                }
             }
         }
 
