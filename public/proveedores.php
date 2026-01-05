@@ -1,0 +1,365 @@
+<?php
+require_once __DIR__ . '/../app/bootstrap.php';
+checkSession();
+
+if (!canAccess('suppliers')) {
+    header('Location: dashboard.php');
+    exit;
+}
+
+$isAdmin = checkAdmin();
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$message = '';
+$messageType = '';
+
+// =====================
+// ACCIONES
+// =====================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $message = 'Error de seguridad';
+        $messageType = 'error';
+    } else {
+        try {
+
+            // ALTA
+            if (isset($_POST['add_supplier'])) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO proveedor
+                    (razon_social, nombre_fantasia, cuit, condicion_iva, telefono, email, direccion, estado)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Activo')
+                ");
+                $stmt->execute([
+                    sanitize($_POST['razon_social']),
+                    sanitize($_POST['nombre_fantasia'] ?? null),
+                    sanitize($_POST['cuit']),
+                    sanitize($_POST['condicion_iva']),
+                    sanitize($_POST['telefono'] ?? null),
+                    sanitize($_POST['email'] ?? null),
+                    sanitize($_POST['direccion'] ?? null)
+                ]);
+                $message = 'Proveedor agregado correctamente';
+                $messageType = 'success';
+            }
+
+            // EDITAR
+            elseif (isset($_POST['update_supplier'])) {
+                $stmt = $pdo->prepare("
+                    UPDATE proveedor SET
+                        razon_social = ?,
+                        nombre_fantasia = ?,
+                        condicion_iva = ?,
+                        telefono = ?,
+                        email = ?,
+                        direccion = ?
+                    WHERE idProveedor = ?
+                ");
+                $stmt->execute([
+                    sanitize($_POST['razon_social']),
+                    sanitize($_POST['nombre_fantasia'] ?? null),
+                    sanitize($_POST['condicion_iva']),
+                    sanitize($_POST['telefono'] ?? null),
+                    sanitize($_POST['email'] ?? null),
+                    sanitize($_POST['direccion'] ?? null),
+                    intval($_POST['idProveedor'])
+                ]);
+                $message = 'Proveedor actualizado';
+                $messageType = 'success';
+            }
+
+            // DESACTIVAR
+            elseif (isset($_POST['delete_supplier'])) {
+                $stmt = $pdo->prepare("UPDATE proveedor SET estado='Inactivo' WHERE idProveedor=?");
+                $stmt->execute([intval($_POST['id'])]);
+                $message = 'Proveedor desactivado';
+                $messageType = 'success';
+            }
+
+            // ACTIVAR
+            elseif (isset($_POST['activate_supplier'])) {
+                $stmt = $pdo->prepare("UPDATE proveedor SET estado='Activo' WHERE idProveedor=?");
+                $stmt->execute([intval($_POST['id'])]);
+                $message = 'Proveedor activado';
+                $messageType = 'success';
+            }
+        } catch (PDOException $e) {
+            $message = 'Error: ' . $e->getMessage();
+            $messageType = 'error';
+        }
+    }
+}
+
+// =====================
+// LISTADO
+// =====================
+$showInactive = isset($_GET['show_inactive']) && $_GET['show_inactive'] == 1;
+
+$sql = $showInactive
+    ? "SELECT * FROM proveedor ORDER BY estado DESC, razon_social"
+    : "SELECT * FROM proveedor WHERE estado='Activo' ORDER BY razon_social";
+
+$proveedores = $pdo->query($sql)->fetchAll();
+?>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Proveedores - <?php echo APP_NAME; ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="assets/js/tailwindcss.js"></script>
+    <link href="assets/css/fontawesome.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+    <?php include __DIR__ . '/../includes/nav.php'; ?>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- HEADER -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">
+                <i class="fas fa-truck text-blue-600 mr-2"></i>Gestión de Proveedores
+            </h1>
+            <div class="flex gap-3">
+                <?php if ($isAdmin): ?>
+                    <a href="?show_inactive=<?php echo $showInactive ? 0 : 1; ?>"
+                        class="bg-gray-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-eye<?php echo $showInactive ? '-slash' : ''; ?> mr-2"></i>
+                        <?php echo $showInactive ? 'Ocultar Inactivos' : 'Ver Inactivos'; ?>
+                    </a>
+                <?php endif; ?>
+                <button onclick="toggleAddForm()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i>Nuevo Proveedor
+                </button>
+            </div>
+        </div>
+
+        <?php if ($message): ?>
+            <div class="mb-4 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- FORM ALTA -->
+        <div id="addForm" class="hidden bg-white rounded-lg shadow-lg mb-6 p-6">
+            <h3 class="text-xl font-bold mb-4">Nuevo Proveedor</h3>
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                <div>
+                    <label>Razón Social *</label>
+                    <input name="razon_social" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>Nombre Fantasía</label>
+                    <input name="nombre_fantasia" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>CUIT *</label>
+                    <input name="cuit" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>Condición IVA *</label>
+                    <select name="condicion_iva" required class="w-full border rounded-lg px-3 py-2">
+                        <option>Responsable Inscripto</option>
+                        <option>Monotributista</option>
+                        <option>Exento</option>
+                        <option>No Responsable</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Teléfono</label>
+                    <input name="telefono" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input type="email" name="email" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="md:col-span-2">
+                    <label>Dirección</label>
+                    <textarea name="direccion" rows="2" class="w-full border rounded-lg px-3 py-2"></textarea>
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <button type="button" onclick="toggleAddForm()" class="bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                    <button name="add_supplier" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- BUSCADOR -->
+        <input id="table_search" onkeyup="filterTable()" placeholder="Buscar proveedor..."
+            class="w-full mb-4 px-4 py-3 border rounded-lg">
+
+        <!-- TABLA -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3">ID</th>
+                        <th class="px-6 py-3">Razón Social</th>
+                        <th class="px-6 py-3">CUIT</th>
+                        <th class="px-6 py-3">IVA</th>
+                        <th class="px-6 py-3 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($proveedores as $p): ?>
+                        <tr class="<?php echo $p['estado'] === 'Inactivo' ? 'bg-red-50' : ''; ?>"
+                            data-search="<?php echo strtolower($p['razon_social'] . ' ' . $p['cuit']); ?>">
+                            <td class="px-6 py-4">#<?php echo $p['idProveedor']; ?></td>
+                            <td class="px-6 py-4 font-semibold"><?php echo htmlspecialchars($p['razon_social']); ?></td>
+                            <td class="px-6 py-4"><?php echo $p['cuit']; ?></td>
+                            <td class="px-6 py-4"><?php echo $p['condicion_iva']; ?></td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="editSupplier(<?php echo htmlspecialchars(json_encode($p)); ?>)"
+                                    class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+
+                                <?php if ($p['estado'] === 'Activo'): ?>
+                                    <button onclick="deleteSupplier(<?php echo $p['idProveedor']; ?>,'<?php echo addslashes($p['razon_social']); ?>')"
+                                        class="text-red-600"><i class="fas fa-ban"></i></button>
+                                <?php else: ?>
+                                    <button onclick="activateSupplier(<?php echo $p['idProveedor']; ?>,'<?php echo addslashes($p['razon_social']); ?>')"
+                                        class="text-green-600"><i class="fas fa-check"></i></button>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Editar Proveedor</h3>
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                <input type="hidden" name="idProveedor" id="edit_id">
+                <div>
+                    <label>Razón Social *</label>
+                    <input name="razon_social" id="edit_razon" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>Nombre Fantasía</label>
+                    <input name="nombre_fantasia" id="edit_fantasia" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>Condición IVA</label>
+                    <select name="condicion_iva" id="edit_iva" class="w-full border rounded-lg px-3 py-2">
+                        <option>Responsable Inscripto</option>
+                        <option>Monotributista</option>
+                        <option>Exento</option>
+                        <option>No Responsable</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Teléfono</label>
+                    <input name="telefono" id="edit_telefono" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input name="email" id="edit_email" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="md:col-span-2">
+                    <label>Dirección</label>
+                    <textarea name="direccion" id="edit_direccion" rows="2" class="w-full border rounded-lg px-3 py-2"></textarea>
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                    <button name="update_supplier" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DESACTIVAR -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Desactivar Proveedor</h3>
+            <p>¿Desactivar a <strong id="delete_name"></strong>?</p>
+            <form method="POST" class="flex gap-2 mt-4">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                <input type="hidden" name="id" id="delete_id">
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                <button name="delete_supplier" class="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg">Desactivar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ACTIVAR -->
+    <div id="activateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Activar Proveedor</h3>
+            <p>¿Activar a <strong id="activate_name"></strong>?</p>
+            <form method="POST" class="flex gap-2 mt-4">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                <input type="hidden" name="id" id="activate_id">
+                <button type="button" onclick="closeActivateModal()" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                <button name="activate_supplier" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg">Activar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleAddForm() {
+            document.getElementById('addForm').classList.toggle('hidden');
+        }
+
+        function filterTable() {
+            const f = document.getElementById('table_search').value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(r => {
+                r.style.display = r.dataset.search.includes(f) ? '' : 'none';
+            });
+        }
+
+        function editSupplier(p) {
+            edit_id.value = p.idProveedor;
+            edit_razon.value = p.razon_social;
+            edit_fantasia.value = p.nombre_fantasia || '';
+            edit_iva.value = p.condicion_iva;
+            edit_telefono.value = p.telefono || '';
+            edit_email.value = p.email || '';
+            edit_direccion.value = p.direccion || '';
+            editModal.classList.remove('hidden');
+            editModal.classList.add('flex');
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex');
+        }
+
+        function deleteSupplier(id, name) {
+            delete_id.value = id;
+            delete_name.textContent = name;
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+        }
+
+        function activateSupplier(id, name) {
+            activate_id.value = id;
+            activate_name.textContent = name;
+            activateModal.classList.remove('hidden');
+            activateModal.classList.add('flex');
+        }
+
+        function closeActivateModal() {
+            activateModal.classList.add('hidden');
+            activateModal.classList.remove('flex');
+        }
+    </script>
+
+</body>
+
+</html>

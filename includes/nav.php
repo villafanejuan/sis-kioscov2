@@ -64,6 +64,17 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
             </a>
         <?php endif; ?>
 
+        <?php if (canAccess('Proveedores')): ?>
+            <a href="proveedores.php"
+               class="flex items-center px-4 py-2 rounded-lg transition
+               <?php echo $currentPage === 'proveedores'
+                   ? 'bg-white bg-opacity-20 text-white shadow'
+                   : 'text-blue-100 hover:bg-white hover:bg-opacity-10 hover:text-white'; ?>">
+                <i class="fas fa-truck w-5 text-lg mr-3"></i>
+                Proveedores
+            </a>
+        <?php endif; ?>
+
         <?php if (canAccess('sales')): ?>
             <a href="sales.php"
                class="flex items-center px-4 py-2 rounded-lg transition
