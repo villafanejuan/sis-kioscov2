@@ -409,13 +409,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
                             $mp = $stmt->fetch();
                             $mp_id = $mp ? $mp['id'] : 4;
 
-                            $stmt = $pdo->prepare("INSERT INTO venta_pagos (venta_id, metodo_pago_id, monto, referencia) VALUES (?, ?, ?, ?)");
-                            $stmt->execute([$venta_id, $mp_id, $total, $referencia]);
+                            $telefono = trim($_POST['transfer_phone'] ?? '');
+
+                            $stmt = $pdo->prepare("INSERT INTO venta_pagos (venta_id, metodo_pago_id, monto, referencia, telefono) VALUES (?, ?, ?, ?, ?)");
+                            $stmt->execute([$venta_id, $mp_id, $total, $referencia, $telefono]);
 
                             // Movimiento en Caja: Monto 0 para NO afectar arqueo físico, pero registrado visualmente
                             // La descripción incluye el monto real para referencia visual
                             if (isset($turnoAbierto) && $turnoAbierto) {
                                 $desc = "Transferencia ($" . number_format($total, 2) . ") - Ref: $referencia";
+                                if (!empty($telefono)) {
+                                    $desc .= " (Tel: $telefono)";
+                                }
                                 // Tipo 'venta' para que salga en listados, monto 0
                                 $stmt = $pdo->prepare("INSERT INTO movimientos_caja (turno_id, tipo, monto, descripcion, venta_id, created_at, usuario_id, fecha) VALUES (?, 'venta', 0, ?, ?, NOW(), ?, NOW())");
                                 $stmt->execute([$turnoAbierto['id'], $desc, $venta_id, $_SESSION['user_id']]);
@@ -823,12 +828,25 @@ $productos = $stmt->fetchAll();
 
                             <div id="transfer_details"
                                 class="hidden mt-3 p-3 bg-purple-50 rounded border border-purple-200">
-                                <label for="transfer_reference" class="block text-sm font-bold text-purple-800 mb-1">
-                                    Nombre del Remitente:
-                                </label>
-                                <input type="text" id="transfer_reference"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                                    placeholder="Ej: Juan Pérez">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="transfer_reference"
+                                            class="block text-sm font-bold text-purple-800 mb-1">
+                                            Nombre del Remitente:
+                                        </label>
+                                        <input type="text" id="transfer_reference"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                            placeholder="Ej: Juan Pérez">
+                                    </div>
+                                    <div>
+                                        <label for="transfer_phone" class="block text-sm font-bold text-purple-800 mb-1">
+                                            Teléfono (Opcional):
+                                        </label>
+                                        <input type="text" id="transfer_phone"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                            placeholder="Ej: 11 1234 5678">
+                                    </div>
+                                </div>
                             </div>
 
                             <p class="text-xs text-gray-500 mt-1">Selecciona un cliente para habilitar "Cuenta
@@ -943,6 +961,7 @@ $productos = $stmt->fetchAll();
             const completeBtn = document.getElementById('complete_sale_btn');
             const methodSelect = document.getElementById('metodo_pago');
             const isCC = methodSelect && methodSelect.value === 'cuenta_corriente';
+            const isTransfer = methodSelect && methodSelect.value === 'transferencia';
 
             if (changeSpan && completeBtn) {
                 if (isCC) {
@@ -960,6 +979,10 @@ $productos = $stmt->fetchAll();
                     completeBtn.disabled = false;
                     completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
+                } else if (isTransfer) {
+                    // Logic for Transfer: Always enable, amount paid ignored/hidden
+                    completeBtn.disabled = false;
+                    completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 } else {
                     // Logic for Cash
                     const change = amountPaid - total;
@@ -1029,7 +1052,13 @@ $productos = $stmt->fetchAll();
             const amountSection = document.getElementById('amount_paid_section');
             const changeSection = document.getElementById('change_section');
             const completeBtn = document.getElementById('complete_sale_btn');
+            const transferDetails = document.getElementById('transfer_details');
 
+            // Actualizar campo hidden
+            const hiddenMethod = document.getElementById('hidden_metodo_pago');
+            if (hiddenMethod) hiddenMethod.value = metodoPago;
+
+            // Manejo de Cuenta Corriente
             if (metodoPago === 'cuenta_corriente' && !clienteVal) {
                 alert('⚠️ ACCIÓN REQUERIDA:\n\nDebes seleccionar un cliente PRIMERO para poder vender al Fiado.');
                 document.getElementById('metodo_pago').value = 'efectivo';
@@ -1037,9 +1066,15 @@ $productos = $stmt->fetchAll();
                 return;
             }
 
-            // Actualizar campo hidden
-            const hiddenMethod = document.getElementById('hidden_metodo_pago');
-            if (hiddenMethod) hiddenMethod.value = metodoPago;
+            // Manejo de Detalles de Transferencia
+            if (transferDetails) {
+                if (metodoPago === 'transferencia') {
+                    transferDetails.classList.remove('hidden');
+                } else {
+                    transferDetails.classList.add('hidden');
+                }
+            }
+
 
             if (metodoPago === 'cuenta_corriente') {
                 // Mostrar campos para entrega parcial
@@ -1055,8 +1090,18 @@ $productos = $stmt->fetchAll();
 
                 // Recalcular para actualizar texto de deuda/cambio
                 calculateChange();
+            } else if (metodoPago === 'transferencia') {
+                // Ocultar montos y cambio
+                if (amountSection) amountSection.style.display = 'none';
+                if (changeSection) changeSection.style.display = 'none';
+
+                // Habilitar botón de completado
+                if (completeBtn) {
+                    completeBtn.disabled = false;
+                    completeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             } else {
-                // Mostrar campos de efectivo
+                // Mostrar campos de efectivo u otros
                 if (amountSection) {
                     amountSection.style.display = 'block';
                     const input = document.getElementById('amount_paid');
@@ -1184,7 +1229,8 @@ $productos = $stmt->fetchAll();
                         <input type="hidden" name="cliente_id" id="hidden_cliente_id" value="">
                         <input type="hidden" name="metodo_pago" id="hidden_metodo_pago" value="efectivo">
                         <input type="hidden" name="transfer_reference" id="hidden_transfer_reference" value="">
-                        <div>
+                        <input type="hidden" name="transfer_phone" id="hidden_transfer_phone" value="">
+                        <div id="amount_paid_section">
                             <label for="amount_paid" class="block text-sm font-medium text-gray-700 mb-1">Monto Pagado</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
@@ -1197,7 +1243,7 @@ $productos = $stmt->fetchAll();
                                 <button type="button" onclick="addAmount(20000)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs transition border border-gray-200 shadow-sm">$20000</button>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center py-2 bg-gray-50 px-3 rounded-lg border border-gray-100">
+                        <div id="change_section" class="flex justify-between items-center py-2 bg-gray-50 px-3 rounded-lg border border-gray-100">
                             <span class="text-gray-600 font-medium">Cambio:</span>
                             <span id="change_amount" class="text-gray-400 font-bold">0.00</span>
                         </div>
@@ -1229,19 +1275,26 @@ $productos = $stmt->fetchAll();
             const methodSelect = document.getElementById('metodo_pago');
             const clientSelect = document.getElementById('cliente_id');
             const transferRefInput = document.getElementById('transfer_reference');
+            const transferPhoneInput = document.getElementById('transfer_phone');
 
             const hiddenMethod = document.getElementById('hidden_metodo_pago');
             const hiddenClient = document.getElementById('hidden_cliente_id');
             const hiddenTransferRef = document.getElementById('hidden_transfer_reference');
+            const hiddenTransferPhone = document.getElementById('hidden_transfer_phone');
 
             if (methodSelect && hiddenMethod) hiddenMethod.value = methodSelect.value;
             if (clientSelect && hiddenClient) hiddenClient.value = clientSelect.value;
             if (transferRefInput && hiddenTransferRef) hiddenTransferRef.value = transferRefInput.value;
+            if (transferPhoneInput && hiddenTransferPhone) hiddenTransferPhone.value = transferPhoneInput.value;
 
-            // Add listener to Sync Transfer Reference
             if (transferRefInput && hiddenTransferRef) {
                 transferRefInput.addEventListener('input', function () {
                     hiddenTransferRef.value = this.value;
+                });
+            }
+            if (transferPhoneInput && hiddenTransferPhone) {
+                transferPhoneInput.addEventListener('input', function () {
+                    hiddenTransferPhone.value = this.value;
                 });
             }
 
@@ -1279,20 +1332,13 @@ $productos = $stmt->fetchAll();
                     }
                 };
             }
+
+            // Ensure UI is consistent with selected method
+            togglePaymentFields();
         }
 
         // Función para mostrar opciones de transferencia
-        function togglePaymentFields() {
-            const select = document.getElementById('metodo_pago');
-            const transferDetails = document.getElementById('transfer_details');
-            if (select && transferDetails) {
-                if (select.value === 'transferencia') {
-                    transferDetails.classList.remove('hidden');
-                } else {
-                    transferDetails.classList.add('hidden');
-                }
-            }
-        }
+
 
         function attachCartEventListeners() {
             // Cart quantity change

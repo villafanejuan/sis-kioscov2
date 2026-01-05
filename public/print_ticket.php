@@ -69,11 +69,29 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
     <title>Ticket #<?php echo $venta_id; ?></title>
     <style>
         /* Forzar tamaño de página para impresión térmica */
-        @page { size: <?php echo intval($paper_width); ?>mm auto; margin: 0; }
-        @media print {
-            html, body { width: <?php echo intval($paper_width); ?>mm; margin: 0; padding: 0; }
-            .no-print { display: none; }
+        @page {
+            size:
+                <?php echo intval($paper_width); ?>
+                mm auto;
+            margin: 0;
         }
+
+        @media print {
+
+            html,
+            body {
+                width:
+                    <?php echo intval($paper_width); ?>
+                    mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
         @media print {
             body {
                 margin: 0;
@@ -86,7 +104,9 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
 
         body {
             font-family: 'Courier New', monospace;
-            width: <?php echo intval($paper_width); ?>mm;
+            width:
+                <?php echo intval($paper_width); ?>
+                mm;
             margin: 0 auto;
             padding: 10px;
             font-size: 12px;
@@ -129,12 +149,26 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
             margin-top: 10px;
             border: 1px solid #000;
         }
+
         <?php if (intval($paper_width) <= 58): ?>
-        /* Ajustes específicos para rollos de 58mm */
-        body { font-size: 10px; padding: 6px; }
-        .ticket { padding: 6px; }
-        img { max-width: 48mm; }
-        .products td { padding: 1px 0; }
+            /* Ajustes específicos para rollos de 58mm */
+            body {
+                font-size: 10px;
+                padding: 6px;
+            }
+
+            .ticket {
+                padding: 6px;
+            }
+
+            img {
+                max-width: 48mm;
+            }
+
+            .products td {
+                padding: 1px 0;
+            }
+
         <?php endif; ?>
     </style>
 </head>
@@ -144,7 +178,8 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
         <!-- Encabezado fiscal (formato para impresoras térmicas) -->
         <?php if (!empty($config['negocio_logo_fiscal']) && file_exists(PUBLIC_PATH . '/uploads/' . $config['negocio_logo_fiscal'])): ?>
             <div class="center" style="margin-bottom:6px;">
-                <img src="/uploads/<?php echo htmlspecialchars($config['negocio_logo_fiscal']); ?>" alt="Logo" style="max-width:60mm; height:auto;">
+                <img src="/uploads/<?php echo htmlspecialchars($config['negocio_logo_fiscal']); ?>" alt="Logo"
+                    style="max-width:60mm; height:auto;">
             </div>
         <?php endif; ?>
 
@@ -165,7 +200,9 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
         <table style="font-size: 10px;">
             <tr>
                 <td>Comprobante:</td>
-                <td class="right bold"><?php echo ($config['comprobante_letra'] ?? 'X') . ' - ' . ($config['comprobante_tipo'] ?? 'TICKET'); ?></td>
+                <td class="right bold">
+                    <?php echo ($config['comprobante_letra'] ?? 'X') . ' - ' . ($config['comprobante_tipo'] ?? 'TICKET'); ?>
+                </td>
             </tr>
             <tr>
                 <td>Punto de Venta:</td>
@@ -207,7 +244,8 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
             </div>
 
             <div style="margin-top:6px;">
-                <table class="products" style="width:100%; font-family: 'Courier New', monospace; font-size:10px; table-layout:fixed; border-collapse:collapse;">
+                <table class="products"
+                    style="width:100%; font-family: 'Courier New', monospace; font-size:10px; table-layout:fixed; border-collapse:collapse;">
                     <thead>
                         <tr>
                             <th style="width:70%; text-align:center; padding-bottom:6px;">Cant./Precio Unit.</th>
@@ -221,13 +259,15 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
                             $subtotal = number_format($det['subtotal'], 2, ',', '.');
                             $iva_pct = isset($det['iva']) ? $det['iva'] : (isset($det['iva_porcentaje']) ? $det['iva_porcentaje'] : (isset($det['porcentaje_iva']) ? $det['porcentaje_iva'] : null));
                             $iva_disp = $iva_pct !== null ? '(' . number_format($iva_pct, 2, ',', '.') . ')' : '';
-                        ?>
+                            ?>
                             <tr>
                                 <td style="width:70%; vertical-align:top; padding:2px 0;">
                                     <div><?php echo $qty; ?> X <?php echo $unit; ?></div>
-                                    <div style="white-space:normal;"><?php echo htmlspecialchars($det['producto_nombre']); ?></div>
+                                    <div style="white-space:normal;">
+                                        <?php echo htmlspecialchars($det['producto_nombre']); ?></div>
                                 </td>
-                                <td style="width:30%; text-align:right; vertical-align:top; padding:2px 0;"><?php echo $iva_disp; ?></td>
+                                <td style="width:30%; text-align:right; vertical-align:top; padding:2px 0;">
+                                    <?php echo $iva_disp; ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -265,17 +305,24 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
             <div class="bold">Forma de Pago:</div>
             <table style="font-size: 10px;">
                 <?php
-                    $pagos_total = 0;
-                    foreach ($pagos as $pago) {
-                        $pagos_total += floatval($pago['monto']);
-                ?>
+                $pagos_total = 0;
+                foreach ($pagos as $pago) {
+                    $pagos_total += floatval($pago['monto']);
+                    ?>
                     <tr>
                         <td><?php echo htmlspecialchars($pago['metodo_nombre']); ?></td>
                         <td class="right">$<?php echo number_format($pago['monto'], 2); ?></td>
                     </tr>
                     <?php if (!empty($pago['referencia'])): ?>
                         <tr>
-                            <td colspan="2" style="font-size: 9px; padding-left: 10px;">Ref: <?php echo htmlspecialchars($pago['referencia']); ?></td>
+                            <td colspan="2" style="font-size: 9px; padding-left: 10px;">Ref:
+                                <?php echo htmlspecialchars($pago['referencia']); ?></td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if (!empty($pago['telefono'])): ?>
+                        <tr>
+                            <td colspan="2" style="font-size: 9px; padding-left: 10px;">Tel:
+                                <?php echo htmlspecialchars($pago['telefono']); ?></td>
                         </tr>
                     <?php endif; ?>
                 <?php } ?>
@@ -285,7 +332,8 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
                 </tr>
                 <tr>
                     <td style="font-weight:bold;">Vuelto:</td>
-                    <td class="right">$<?php echo number_format(max(0, $pagos_total - floatval($venta['total'])), 2); ?></td>
+                    <td class="right">$<?php echo number_format(max(0, $pagos_total - floatval($venta['total'])), 2); ?>
+                    </td>
                 </tr>
             </table>
         <?php else: ?>
