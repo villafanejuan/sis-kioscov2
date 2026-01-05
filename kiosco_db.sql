@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 05-01-2026 a las 18:38:22
+-- Tiempo de generación: 05-01-2026 a las 19:32:43
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -503,6 +503,48 @@ INSERT INTO `promocion_productos` (`id`, `promocion_id`, `producto_id`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `proveedor`
+--
+
+CREATE TABLE `proveedor` (
+  `idProveedor` int(11) NOT NULL,
+  `razon_social` varchar(255) NOT NULL,
+  `nombre_fantasia` varchar(255) DEFAULT NULL,
+  `cuit` char(11) NOT NULL,
+  `condicion_iva` enum('Responsable Inscripto','Monotributista','Exento','No Responsable','Consumidor Final') NOT NULL,
+  `direccion` varchar(255) DEFAULT NULL,
+  `localidad` varchar(150) DEFAULT NULL,
+  `provincia` varchar(150) DEFAULT NULL,
+  `codigo_postal` varchar(20) DEFAULT NULL,
+  `telefono` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `sitio_web` varchar(150) DEFAULT NULL,
+  `contacto_nombre` varchar(150) DEFAULT NULL,
+  `contacto_telefono` varchar(50) DEFAULT NULL,
+  `banco` varchar(150) DEFAULT NULL,
+  `cbu` char(22) DEFAULT NULL,
+  `alias_cbu` varchar(50) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `estado` enum('Activo','Inactivo') DEFAULT 'Activo',
+  `fecha_alta` date DEFAULT curdate()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `proveedor`
+--
+
+INSERT INTO `proveedor` (`idProveedor`, `razon_social`, `nombre_fantasia`, `cuit`, `condicion_iva`, `direccion`, `localidad`, `provincia`, `codigo_postal`, `telefono`, `email`, `sitio_web`, `contacto_nombre`, `contacto_telefono`, `banco`, `cbu`, `alias_cbu`, `observaciones`, `estado`, `fecha_alta`) VALUES
+(1, 'Distribuidora Sur S.A.S', 'Sur Distribucion', '30712345678', 'Responsable Inscripto', 'Av. San Martín 2451', 'Rosario', 'Santa Fe', '2000', '0341-4567891', 'contacto@surdist.com.ar', 'www.surdist.com.ar', 'María González', '0341-155678901', 'Banco Nación', '0110599520000001234567', 'SUR.DIST.RO', 'Proveedor habitual de insumos', 'Inactivo', '2026-01-05'),
+(2, 'Servicios Técnicos López', NULL, '20345678901', 'Monotributista', 'Mitre 850', 'Santa Fe', 'Santa Fe', '3000', '0342-4234567', 'tecnico.lopez@gmail.com', NULL, 'Juan López', '0342-154123456', 'Banco Macro', '2850590940090412345678', 'LOPEZ.TECNICO', 'Mantenimiento y reparaciones', 'Activo', '2026-01-05'),
+(3, 'Papelera del Litoral SRL', 'Litoral Papel', '30765432109', 'Responsable Inscripto', 'Ruta 11 Km 482', 'Recreo', 'Santa Fe', '3018', '0342-4901122', 'ventas@litoralpapel.com.ar', 'www.litoralpapel.com.ar', 'Carlos Medina', '0342-156789012', 'Banco Santander', '0720590920000009876543', 'LITORAL.PAPEL', 'Entrega semanal', 'Activo', '2026-01-05'),
+(4, 'Estudio Contable Fernández', NULL, '27234567890', 'Exento', '9 de Julio 1123', 'Rafaela', 'Santa Fe', '2300', '03492-432100', 'estudiofernandez@gmail.com', NULL, 'Laura Fernández', '03492-154567890', 'Banco Galicia', '0070590920000004567890', 'ESTUDIO.FERNANDEZ', 'Honorarios mensuales', 'Activo', '2026-01-05'),
+(5, 'Logística Norte S.A.', 'Norte Logística', '30987654321', 'Responsable Inscripto', 'Av. Circunvalación 5400', 'Córdoba', 'Córdoba', '5000', '0351-4987654', 'info@nortelogistica.com.ar', 'www.nortelogistica.com.ar', 'Pablo Ruiz', '0351-156543210', 'Banco BBVA', '0170590920000001122334', 'NORTE.LOGISTICA', 'Transporte de mercadería', 'Activo', '2026-01-05'),
+(6, 'Rtoo', 'tu nno mete cabra', '2034403', 'Responsable Inscripto', 'asdasd', NULL, NULL, NULL, '3121286800', 'test@example.us', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Activo', '2026-01-05'),
+(7, 'Juanjo S.A', 'Fantasia', '202323992', 'Responsable Inscripto', 'nashe', NULL, NULL, NULL, '3408-402912', 'juanjo@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Activo', '2026-01-05');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `roles`
 --
 
@@ -949,6 +991,13 @@ ALTER TABLE `promocion_productos`
   ADD KEY `producto_id` (`producto_id`);
 
 --
+-- Indices de la tabla `proveedor`
+--
+ALTER TABLE `proveedor`
+  ADD PRIMARY KEY (`idProveedor`),
+  ADD UNIQUE KEY `cuit` (`cuit`);
+
+--
 -- Indices de la tabla `roles`
 --
 ALTER TABLE `roles`
@@ -1067,6 +1116,12 @@ ALTER TABLE `promociones`
 --
 ALTER TABLE `promocion_productos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `proveedor`
+--
+ALTER TABLE `proveedor`
+  MODIFY `idProveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
