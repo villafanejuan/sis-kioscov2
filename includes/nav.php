@@ -75,6 +75,17 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
             </a>
         <?php endif; ?>
 
+        <?php if (canAccess('Tickets')): ?>
+            <a href="tickets.php"
+               class="flex items-center px-4 py-2 rounded-lg transition
+               <?php echo $currentPage === 'tickets'
+                   ? 'bg-white bg-opacity-20 text-white shadow'
+                   : 'text-blue-100 hover:bg-white hover:bg-opacity-10 hover:text-white'; ?>">
+                <i class="fas fa-users w-5 text-lg mr-3"></i>
+                Tickets
+            </a>
+        <?php endif; ?>
+
         <?php if (canAccess('sales')): ?>
             <a href="sales.php"
                class="flex items-center px-4 py-2 rounded-lg transition

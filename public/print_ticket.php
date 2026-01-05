@@ -8,11 +8,13 @@ if (!isset($_GET['id'])) {
 
 $venta_id = intval($_GET['id']);
 
-// Obtener datos de la venta
+// Obtener datos de la venta (USANDO SOLO COLUMNAS EXISTENTES)
 $stmt = $pdo->prepare("
     SELECT v.*, 
-           c.nombre as cliente_nombre, c.telefono as cliente_telefono,
-           u.nombre as vendedor
+           c.nombre as cliente_nombre, 
+           c.telefono as cliente_telefono,
+           c.direccion as cliente_direccion,
+           u.username as VENDEDOR
     FROM ventas v
     LEFT JOIN clientes c ON v.cliente_id = c.id
     LEFT JOIN usuarios u ON v.usuario_id = u.id
@@ -27,10 +29,13 @@ if (!$venta) {
 
 // Obtener detalles de productos
 $stmt = $pdo->prepare("
-    SELECT vd.*, p.nombre as producto_nombre
+    SELECT vd.*, 
+           p.nombre as producto_nombre,
+           p.codigo_barra as producto_codigo
     FROM venta_detalles vd
     JOIN productos p ON vd.producto_id = p.id
     WHERE vd.venta_id = ?
+    ORDER BY vd.id
 ");
 $stmt->execute([$venta_id]);
 $detalles = $stmt->fetchAll();
@@ -57,8 +62,28 @@ $config = [];
 foreach ($config_rows as $row) {
     $config[$row['clave']] = $row['valor'];
 }
-// Ancho de papel para impresión (mm). Puede configurarse en tabla `configuracion` con clave 'ticket_paper_width' (ej. '80' o '58')
-$paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_width'] : '80';
+
+// Calcular IVA (21% por defecto para Argentina)
+$iva_porcentaje = 21.00;
+$subtotal_sin_iva = 0;
+$total_iva = 0;
+
+foreach ($detalles as $det) {
+    $subtotal_sin_iva += $det['precio'] * $det['cantidad'];
+}
+$total_iva = $subtotal_sin_iva * ($iva_porcentaje / 100);
+
+// Determinar si es cuenta corriente
+$es_cuenta_corriente = false;
+foreach ($pagos as $pago) {
+    if (stripos($pago['metodo_nombre'], 'Cuenta Corriente') !== false) {
+        $es_cuenta_corriente = true;
+        break;
+    }
+}
+
+// Ancho de papel
+$paper_width = '80'; // Valor por defecto para impresoras térmicas estándar
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -66,322 +91,316 @@ $paper_width = !empty($config['ticket_paper_width']) ? $config['ticket_paper_wid
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket #<?php echo $venta_id; ?></title>
+    <title>Comprobante #<?php echo $venta_id; ?></title>
     <style>
-        /* Forzar tamaño de página para impresión térmica */
+        /* Estilos optimizados para impresión térmica 80mm */
         @page {
-            size:
-                <?php echo intval($paper_width); ?>
-                mm auto;
+            size: 80mm auto;
             margin: 0;
         }
 
         @media print {
-
-            html,
-            body {
-                width:
-                    <?php echo intval($paper_width); ?>
-                    mm;
+            html, body {
+                width: 80mm;
                 margin: 0;
                 padding: 0;
             }
-
+            
             .no-print {
-                display: none;
-            }
-        }
-
-        @media print {
-            body {
-                margin: 0;
-            }
-
-            .no-print {
-                display: none;
+                display: none !important;
             }
         }
 
         body {
             font-family: 'Courier New', monospace;
-            width:
-                <?php echo intval($paper_width); ?>
-                mm;
+            width: 80mm;
             margin: 0 auto;
-            padding: 10px;
-            font-size: 12px;
+            padding: 2mm 3mm;
+            font-size: 10px;
+            line-height: 1.1;
         }
 
         .ticket {
-            border: 1px dashed #000;
-            padding: 10px;
+            padding: 1mm 0;
         }
 
-        .center {
+        .text-center {
             text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
         }
 
         .bold {
             font-weight: bold;
         }
 
+        .condensed {
+            font-size: 9px;
+            line-height: 1;
+        }
+
         .line {
             border-top: 1px dashed #000;
-            margin: 10px 0;
+            margin: 2px 0;
+        }
+
+        .double-line {
+            border-top: 3px double #000;
+            margin: 4px 0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 9px;
         }
 
-        td {
-            padding: 2px 0;
+        th, td {
+            padding: 1px 0;
+            vertical-align: top;
         }
 
-        .right {
-            text-align: right;
+        .header {
+            border-bottom: 2px solid #000;
+            padding-bottom: 3px;
+            margin-bottom: 3px;
         }
 
-        .total-box {
-            background: #f0f0f0;
-            padding: 5px;
-            margin-top: 10px;
+        .productos-table th {
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+        }
+
+        .product-row td {
+            padding: 1px 0;
+        }
+
+        .totales-box {
+            background: #f8f8f8;
+            padding: 4px;
+            margin: 4px 0;
             border: 1px solid #000;
         }
 
-        <?php if (intval($paper_width) <= 58): ?>
-            /* Ajustes específicos para rollos de 58mm */
-            body {
-                font-size: 10px;
-                padding: 6px;
-            }
+        .iva-row {
+            font-size: 8px;
+            color: #666;
+        }
 
-            .ticket {
-                padding: 6px;
-            }
+        .legal-footer {
+            font-size: 8px;
+            text-align: center;
+            margin-top: 5px;
+            padding-top: 3px;
+            border-top: 1px dashed #ccc;
+        }
 
-            img {
-                max-width: 48mm;
-            }
-
-            .products td {
-                padding: 1px 0;
-            }
-
-        <?php endif; ?>
+        .cuenta-corriente {
+            background: #fff3cd;
+            padding: 3px;
+            margin: 3px 0;
+            border: 1px solid #ffc107;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 
 <body>
     <div class="ticket">
-        <!-- Encabezado fiscal (formato para impresoras térmicas) -->
-        <?php if (!empty($config['negocio_logo_fiscal']) && file_exists(PUBLIC_PATH . '/uploads/' . $config['negocio_logo_fiscal'])): ?>
-            <div class="center" style="margin-bottom:6px;">
-                <img src="/uploads/<?php echo htmlspecialchars($config['negocio_logo_fiscal']); ?>" alt="Logo"
-                    style="max-width:60mm; height:auto;">
+        <!-- ENCABEZADO PROFESIONAL -->
+        <div class="header text-center">
+            <div style="font-size: 12px; font-weight: bold; letter-spacing: 1px;">
+                <?php echo strtoupper($config['negocio_nombre'] ?? 'MI KIOSCO'); ?>
             </div>
-        <?php endif; ?>
-
-        <div class="center bold" style="font-size: 16px;">
-            <?php echo strtoupper($config['negocio_nombre'] ?? 'MI KIOSCO'); ?>
+            <div class="condensed">
+                <?php echo $config['negocio_direccion'] ?? 'Calle Principal 123'; ?><br>
+                Tel: <?php echo $config['negocio_telefono'] ?? '123-456-7890'; ?>
+            </div>
         </div>
 
-        <div style="font-size:10px;">
-            <div><?php echo $config['negocio_direccion'] ?? ''; ?></div>
-            <div>Tel: <?php echo $config['negocio_telefono'] ?? ''; ?></div>
-            <div><?php echo $config['negocio_email'] ?? ''; ?></div>
-            <div>CUIT: <?php echo $config['negocio_cuit'] ?? '--'; ?></div>
-        </div>
-
-        <div class="line"></div>
-
-        <!-- Datos de la venta / comprobante -->
-        <table style="font-size: 10px;">
+        <!-- DATOS DEL COMPROBANTE -->
+        <table class="condensed">
             <tr>
-                <td>Comprobante:</td>
-                <td class="right bold">
-                    <?php echo ($config['comprobante_letra'] ?? 'X') . ' - ' . ($config['comprobante_tipo'] ?? 'TICKET'); ?>
-                </td>
-            </tr>
-            <tr>
-                <td>Punto de Venta:</td>
-                <td class="right"><?php echo str_pad($config['punto_venta'] ?? '0001', 4, '0', STR_PAD_LEFT); ?></td>
+                <td><strong>COMPROBANTE:</strong></td>
+                <td class="text-right"><strong>TICKET</strong></td>
             </tr>
             <tr>
                 <td>Número:</td>
-                <td class="right bold"><?php echo str_pad($venta_id, 6, '0', STR_PAD_LEFT); ?></td>
+                <td class="text-right"><?php echo str_pad($venta_id, 8, '0', STR_PAD_LEFT); ?></td>
             </tr>
             <tr>
-                <td>Fecha y hora:</td>
-                <td class="right"><?php echo date('d/m/Y H:i', strtotime($venta['fecha'])); ?></td>
+                <td>Fecha:</td>
+                <td class="text-right"><?php echo date('d/m/Y H:i', strtotime($venta['fecha'])); ?></td>
             </tr>
             <tr>
                 <td>Vendedor:</td>
-                <td class="right"><?php echo htmlspecialchars($venta['vendedor'] ?? 'N/A'); ?></td>
+                <td class="text-right"><?php echo htmlspecialchars($venta['VENDEDOR'] ?? 'SISTEMA'); ?></td>
             </tr>
-            <?php if ($venta['cliente_nombre']): ?>
-                <tr>
-                    <td>Cliente:</td>
-                    <td class="right"><?php echo htmlspecialchars($venta['cliente_nombre']); ?></td>
-                </tr>
-                <?php if ($venta['cliente_telefono']): ?>
-                    <tr>
-                        <td>Tel:</td>
-                        <td class="right"><?php echo htmlspecialchars($venta['cliente_telefono']); ?></td>
-                    </tr>
-                <?php endif; ?>
-            <?php endif; ?>
         </table>
 
         <div class="line"></div>
 
-        <!-- Productos (formato inspirado en ticket de ejemplo) -->
-        <div style="font-size:10px;">
-            <div style="border-bottom:1px dashed #000; margin-bottom:6px; padding-bottom:4px;">
-                <strong>CLIENTE:</strong>
-                <?php echo $venta['cliente_nombre'] ? ' ' . htmlspecialchars($venta['cliente_nombre']) : ' A CONSUMIDOR FINAL'; ?>
-            </div>
-
-            <div style="margin-top:6px;">
-                <table class="products"
-                    style="width:100%; font-family: 'Courier New', monospace; font-size:10px; table-layout:fixed; border-collapse:collapse;">
-                    <thead>
-                        <tr>
-                            <th style="width:70%; text-align:center; padding-bottom:6px;">Cant./Precio Unit.</th>
-                            <th style="width:30%; text-align:right; padding-bottom:6px;">Descripción (%IVA)[%BI]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($detalles as $det):
-                            $qty = number_format($det['cantidad'], 3, ',', '.');
-                            $unit = number_format($det['precio'], 2, ',', '.');
-                            $subtotal = number_format($det['subtotal'], 2, ',', '.');
-                            $iva_pct = isset($det['iva']) ? $det['iva'] : (isset($det['iva_porcentaje']) ? $det['iva_porcentaje'] : (isset($det['porcentaje_iva']) ? $det['porcentaje_iva'] : null));
-                            $iva_disp = $iva_pct !== null ? '(' . number_format($iva_pct, 2, ',', '.') . ')' : '';
-                            ?>
-                            <tr>
-                                <td style="width:70%; vertical-align:top; padding:2px 0;">
-                                    <div><?php echo $qty; ?> X <?php echo $unit; ?></div>
-                                    <div style="white-space:normal;">
-                                        <?php echo htmlspecialchars($det['producto_nombre']); ?></div>
-                                </td>
-                                <td style="width:30%; text-align:right; vertical-align:top; padding:2px 0;">
-                                    <?php echo $iva_disp; ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <div style="border-top:1px dashed #000; margin-top:6px;"></div>
-            </div>
+        <!-- DATOS DEL CLIENTE -->
+        <?php if (!empty($venta['cliente_nombre'])): ?>
+        <div class="condensed">
+            <div><strong>CLIENTE:</strong> <?php echo htmlspecialchars($venta['cliente_nombre']); ?></div>
+            <?php if (!empty($venta['cliente_telefono'])): ?>
+                <div>Tel: <?php echo htmlspecialchars($venta['cliente_telefono']); ?></div>
+            <?php endif; ?>
+            <div>Consumidor final</div>
         </div>
-
         <div class="line"></div>
-
-        <!-- Totales -->
-        <table>
-            <?php if (!empty($descuentos)): ?>
-                <tr>
-                    <td>Subtotal:</td>
-                    <td class="right">$<?php echo number_format($venta['subtotal'] ?? $venta['total'], 2); ?></td>
-                </tr>
-                <?php foreach ($descuentos as $desc): ?>
-                    <tr>
-                        <td style="font-size: 10px;"><?php echo htmlspecialchars($desc['descripcion']); ?></td>
-                        <td class="right" style="color: red;">-$<?php echo number_format($desc['monto_descuento'], 2); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-            <tr style="font-size: 16px;">
-                <td class="bold">TOTAL:</td>
-                <td class="right bold">$<?php echo number_format($venta['total'], 2); ?></td>
-            </tr>
-        </table>
-
-        <div class="line"></div>
-
-        <!-- Métodos de pago -->
-        <?php if (!empty($pagos)): ?>
-            <div class="bold">Forma de Pago:</div>
-            <table style="font-size: 10px;">
-                <?php
-                $pagos_total = 0;
-                foreach ($pagos as $pago) {
-                    $pagos_total += floatval($pago['monto']);
-                    ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($pago['metodo_nombre']); ?></td>
-                        <td class="right">$<?php echo number_format($pago['monto'], 2); ?></td>
-                    </tr>
-                    <?php if (!empty($pago['referencia'])): ?>
-                        <tr>
-                            <td colspan="2" style="font-size: 9px; padding-left: 10px;">Ref:
-                                <?php echo htmlspecialchars($pago['referencia']); ?></td>
-                        </tr>
-                    <?php endif; ?>
-                    <?php if (!empty($pago['telefono'])): ?>
-                        <tr>
-                            <td colspan="2" style="font-size: 9px; padding-left: 10px;">Tel:
-                                <?php echo htmlspecialchars($pago['telefono']); ?></td>
-                        </tr>
-                    <?php endif; ?>
-                <?php } ?>
-                <tr>
-                    <td style="font-weight:bold;">Pagó:</td>
-                    <td class="right">$<?php echo number_format($pagos_total, 2); ?></td>
-                </tr>
-                <tr>
-                    <td style="font-weight:bold;">Vuelto:</td>
-                    <td class="right">$<?php echo number_format(max(0, $pagos_total - floatval($venta['total'])), 2); ?>
-                    </td>
-                </tr>
-            </table>
-        <?php else: ?>
-            <table>
-                <tr>
-                    <td>Pagó:</td>
-                    <td class="right">$<?php echo number_format($venta['monto_pagado'], 2); ?></td>
-                </tr>
-                <tr>
-                    <td>Cambio:</td>
-                    <td class="right">$<?php echo number_format($venta['cambio'], 2); ?></td>
-                </tr>
-            </table>
         <?php endif; ?>
 
-        <div class="line"></div>
+        <!-- DETALLE DE PRODUCTOS -->
+        <table class="productos-table">
+            <thead>
+                <tr>
+                    <th class="text-left">Cant.</th>
+                    <th class="text-left">Descripción</th>
+                    <th class="text-right">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($detalles as $det): ?>
+                <tr class="product-row">
+                    <td class="text-left"><?php echo number_format($det['cantidad'], 0, ',', '.'); ?></td>
+                    <td class="text-left"><?php echo htmlspecialchars($det['producto_nombre']); ?></td>
+                    <td class="text-right">$<?php echo number_format($det['subtotal'], 2, ',', '.'); ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-        <!-- Mensaje final -->
-        <div class="center" style="font-size: 11px; margin-top: 10px;">
-            <?php echo $config['ticket_mensaje'] ?? '¡Gracias por su compra!'; ?>
+        <div class="double-line"></div>
+
+        <!-- TOTALES -->
+        <div class="totales-box">
+            <table>
+                <?php if (!empty($descuentos)): ?>
+                    <?php foreach ($descuentos as $desc): ?>
+                    <tr class="iva-row">
+                        <td class="text-left"><?php echo htmlspecialchars($desc['descripcion']); ?></td>
+                        <td class="text-right">-$<?php echo number_format($desc['monto_descuento'], 2, ',', '.'); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                
+                <!-- IVA DISCRIMINADO -->
+                <tr class="iva-row">
+                    <td class="text-left">IVA 21%:</td>
+                    <td class="text-right">$<?php echo number_format($total_iva, 2, ',', '.'); ?></td>
+                </tr>
+                
+                <tr style="border-top: 1px solid #000;">
+                    <td class="text-left bold" style="font-size: 11px;">TOTAL:</td>
+                    <td class="text-right bold" style="font-size: 11px;">$<?php echo number_format($venta['total'], 2, ',', '.'); ?></td>
+                </tr>
+            </table>
         </div>
 
-        <div class="center" style="font-size: 9px; margin-top: 10px;">
-            Documento no valido como factura.
+        <!-- FORMAS DE PAGO -->
+        <?php if (!empty($pagos)): ?>
+            <div class="condensed" style="margin-top: 5px;">
+                <strong>FORMA DE PAGO:</strong>
+                <?php 
+                $total_pagos = 0;
+                foreach ($pagos as $pago): 
+                    $total_pagos += floatval($pago['monto']);
+                ?>
+                <div>
+                    <?php echo htmlspecialchars($pago['metodo_nombre']); ?>: 
+                    <span class="text-right">$<?php echo number_format($pago['monto'], 2, ',', '.'); ?></span>
+                </div>
+                <?php endforeach; ?>
+                
+                <table style="margin-top: 3px;">
+                    <?php if ($total_pagos > 0): ?>
+                    <tr>
+                        <td class="text-left"><strong>Pagó:</strong></td>
+                        <td class="text-right"><strong>$<?php echo number_format($total_pagos, 2, ',', '.'); ?></strong></td>
+                    </tr>
+                    <?php endif; ?>
+                    
+                    <?php if ($total_pagos > $venta['total']): ?>
+                    <tr>
+                        <td class="text-left"><strong>Vuelto:</strong></td>
+                        <td class="text-right"><strong>$<?php echo number_format($total_pagos - $venta['total'], 2, ',', '.'); ?></strong></td>
+                    </tr>
+                    <?php endif; ?>
+                </table>
+            </div>
+        <?php endif; ?>
+
+        <!-- INDICADOR CUENTA CORRIENTE -->
+        <?php if ($es_cuenta_corriente): ?>
+        <div class="cuenta-corriente">
+            ⚠️ COMPROBANTE CUENTA CORRIENTE
+        </div>
+        <?php endif; ?>
+
+        <!-- PIE DE PÁGINA LEGAL -->
+        <div class="legal-footer">
+            <div style="margin-bottom: 3px;">
+                <?php echo $config['ticket_mensaje'] ?? '¡Gracias por su compra!'; ?>
+            </div>
+            
+            <?php if ($es_cuenta_corriente): ?>
+            <div style="color: #d32f2f; font-weight: bold;">
+                COMPROBANTE CUENTA CORRIENTE - CONSERVAR PARA CONTROL
+            </div>
+            <?php else: ?>
+            <div>
+                <strong>TICKET - NO VÁLIDO COMO FACTURA</strong>
+            </div>
+            <?php endif; ?>
+            
+            <div style="margin-top: 3px; font-size: 7px;">
+                Conserve este comprobante para cambios o reclamos.<br>
+                <?php if (!empty($config['negocio_telefono'])): ?>
+                Tel: <?php echo $config['negocio_telefono']; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
-    <!-- Botones de acción -->
-    <div class="no-print" style="text-align: center; margin-top: 20px;">
-        <button onclick="window.print()"
-            style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-            <i class="fas fa-print"></i> Imprimir
+    <!-- BOTONES DE ACCIÓN (SOLO EN NAVEGADOR) -->
+    <div class="no-print" style="text-align: center; margin-top: 20px; padding: 10px;">
+        <button onclick="window.print()" style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+            🖨️ Imprimir Ticket
         </button>
-        <button onclick="window.close()"
-            style="background: #f44336; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-            <i class="fas fa-times"></i> Cerrar
+        <button onclick="window.close()" style="background: #f44336; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+            ❌ Cerrar
         </button>
     </div>
 
     <script>
         // Auto-imprimir si está configurado
         <?php if (($config['ticket_auto_print'] ?? '0') == '1'): ?>
-            window.onload = function () {
-                setTimeout(function () {
+            window.onload = function() {
+                setTimeout(function() {
                     window.print();
                 }, 500);
             };
         <?php endif; ?>
+        
+        // Mejorar experiencia de impresión
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+            if (e.key === 'Escape') {
+                window.close();
+            }
+        });
     </script>
 </body>
 
