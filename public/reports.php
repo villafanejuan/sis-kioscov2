@@ -122,6 +122,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reportes - Sistema Kiosco</title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
     <style>
         .badge {
@@ -136,29 +137,34 @@ $productos_mas_vendidos = $stmt->fetchAll();
             border-radius: 0.25rem;
         }
 
+        .badge-primary {
+            color: #1f2937;
+            background-color: #e5e7eb;
+            border: 1px solid #9ca3af;
+        }
+
         .badge-success {
-            color: #fff;
-            background-color: #28a745;
+            color: #065f46;
+            background-color: #d1fae5;
+            border: 1px solid #a7f3d0;
         }
 
         .badge-warning {
-            color: #212529;
-            background-color: #ffc107;
+            color: #92400e;
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
         }
 
         .badge-danger {
-            color: #fff;
-            background-color: #dc3545;
+            color: #991b1b;
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
         }
 
         .badge-info {
-            color: #fff;
-            background-color: #17a2b8;
-        }
-
-        .badge-primary {
-            color: #fff;
-            background-color: #007bff;
+            color: #1e40af;
+            background-color: #dbeafe;
+            border: 1px solid #bfdbfe;
         }
     </style>
 </head>
@@ -169,15 +175,15 @@ $productos_mas_vendidos = $stmt->fetchAll();
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <h1 class="text-3xl font-bold text-gray-800">
-                <i class="fas fa-chart-pie text-purple-600 mr-2"></i>Reportes Financieros
+                <i class="fas fa-chart-pie text-gray-600 mr-2"></i>Reportes Financieros
             </h1>
 
             <?php if ($isAdmin || $userRole === 'cajero'): ?>
-                <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                <div class="bg-white p-2 border border-gray-300 shadow-none">
                     <form method="GET" class="flex items-center gap-2">
                         <label for="user_filter" class="text-sm font-medium text-gray-700">Filtrar por:</label>
                         <select name="user_filter" id="user_filter" onchange="this.form.submit()"
-                            class="border-gray-300 rounded-md shadow-sm text-sm py-1">
+                            class="border-gray-300 rounded-none shadow-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500">
                             <option value="all" <?php echo (!isset($_GET['user_filter']) || $_GET['user_filter'] === 'all') ? 'selected' : ''; ?>>
                                 📊 General (Todos)
                             </option>
@@ -202,7 +208,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <!-- Total Ventas -->
-            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-blue-500">
+            <div class="bg-white p-4 border border-gray-300 shadow-none border-l-4 border-gray-600">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-xs font-medium uppercase">Ventas (Cant)</p>
@@ -210,13 +216,13 @@ $productos_mas_vendidos = $stmt->fetchAll();
                             <?php echo number_format($stats['total_ventas']); ?>
                         </h3>
                     </div>
-                    <div class="p-2 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-shopping-cart text-lg"></i>
+                    <div class="p-2 bg-gray-100 text-gray-600"><i class="fas fa-shopping-cart text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Total Facturado -->
-            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-green-500">
+            <div class="bg-white p-4 border border-gray-300 shadow-none border-l-4 border-gray-700">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-xs font-medium uppercase">Total Facturado</p>
@@ -224,51 +230,48 @@ $productos_mas_vendidos = $stmt->fetchAll();
                             $<?php echo number_format($stats['total_valor'], 2); ?></h3>
                         <p class="text-xs text-gray-400 mt-1">Valor mercancía vendida</p>
                     </div>
-                    <div class="p-2 bg-green-100 rounded-full text-green-600"><i
-                            class="fas fa-file-invoice-dollar text-lg"></i></div>
+                    <div class="p-2 bg-gray-100 text-gray-700"><i class="fas fa-file-invoice-dollar text-lg"></i></div>
                 </div>
             </div>
 
             <!-- Efectivo (Caja) -->
-            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-teal-500">
+            <div class="bg-white p-4 border border-gray-300 shadow-none border-l-4 border-gray-800">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-xs font-medium uppercase">Efectivo Físico</p>
-                        <h3 class="text-2xl font-bold text-teal-700 mt-1">
+                        <h3 class="text-2xl font-bold text-gray-900 mt-1">
                             $<?php echo number_format($stats['dinero_caja'], 2); ?></h3>
                         <p class="text-xs text-gray-400 mt-1">En mano</p>
                     </div>
-                    <div class="p-2 bg-teal-100 rounded-full text-teal-600"><i class="fas fa-cash-register text-lg"></i>
+                    <div class="p-2 bg-gray-100 text-gray-800"><i class="fas fa-cash-register text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Transferencias -->
-            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-purple-500">
+            <div class="bg-white p-4 border border-gray-300 shadow-none border-l-4 border-gray-500">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-xs font-medium uppercase">Transferencias</p>
-                        <h3 class="text-2xl font-bold text-purple-700 mt-1">
+                        <h3 class="text-2xl font-bold text-gray-700 mt-1">
                             $<?php echo number_format($stats['total_transfer'], 2); ?></h3>
                         <p class="text-xs text-gray-400 mt-1">Digital</p>
                     </div>
-                    <div class="p-2 bg-purple-100 rounded-full text-purple-600"><i
-                            class="fas fa-mobile-alt text-lg"></i>
+                    <div class="p-2 bg-gray-100 text-gray-600"><i class="fas fa-mobile-alt text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Crédito Otorgado (Fiado) -->
-            <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-red-500">
+            <div class="bg-white p-4 border border-gray-300 shadow-none border-l-4 border-gray-400">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-xs font-medium uppercase">Fiado Pendiente</p>
-                        <h3 class="text-2xl font-bold text-red-600 mt-1">
+                        <h3 class="text-2xl font-bold text-gray-600 mt-1">
                             $<?php echo number_format($stats['credito_otorgado'], 2); ?></h3>
                         <p class="text-xs text-gray-400 mt-1">Crédito otorgado</p>
                     </div>
-                    <div class="p-2 bg-red-100 rounded-full text-red-600"><i
-                            class="fas fa-hand-holding-usd text-lg"></i></div>
+                    <div class="p-2 bg-gray-100 text-gray-500"><i class="fas fa-hand-holding-usd text-lg"></i></div>
                 </div>
             </div>
         </div>
@@ -374,10 +377,10 @@ $productos_mas_vendidos = $stmt->fetchAll();
         ?>
 
         <!-- Transactions Table -->
-        <div class="bg-white p-6 rounded-xl shadow-lg mt-8 mb-8">
+        <div class="bg-white p-6 border border-gray-300 shadow-none mt-8 mb-8">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h3 class="text-xl font-semibold text-gray-800">
-                    <i class="fas fa-list-ul text-blue-600 mr-2"></i>Historial de Transacciones (Ventas y Pagos)
+                    <i class="fas fa-list-ul text-gray-600 mr-2"></i>Historial de Transacciones (Ventas y Pagos)
                 </h3>
 
                 <!-- Filter Form -->
@@ -387,7 +390,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
                             value="<?php echo htmlspecialchars($_GET['user_filter']); ?>">
                     <?php endif; ?>
                     <select name="period" id="period" onchange="toggleDateInputs()"
-                        class="border-gray-300 rounded text-sm py-1">
+                        class="border-gray-300 rounded-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500">
                         <option value="today" <?php echo $period === 'today' ? 'selected' : ''; ?>>📅 Hoy</option>
                         <option value="week" <?php echo $period === 'week' ? 'selected' : ''; ?>>📅 Semana</option>
                         <option value="month" <?php echo $period === 'month' ? 'selected' : ''; ?>>📅 Mes</option>
@@ -411,15 +414,15 @@ $productos_mas_vendidos = $stmt->fetchAll();
 
                 <div class="flex gap-2">
                     <button onclick="exportTableToExcel('trans_table', 'Transacciones_<?php echo $period; ?>')"
-                        class="bg-green-600 text-white px-3 py-1 rounded text-sm"><i
+                        class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-1 rounded-none text-sm"><i
                             class="fas fa-file-excel mr-1"></i>Excel</button>
                     <button onclick="exportTableToPDF('Transacciones_<?php echo $period; ?>')"
-                        class="bg-red-600 text-white px-3 py-1 rounded text-sm"><i
+                        class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 px-3 py-1 rounded-none text-sm"><i
                             class="fas fa-file-pdf mr-1"></i>PDF</button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+            <div class="overflow-x-auto border border-gray-300 shadow-none">
                 <table id="trans_table" class="min-w-full table-auto text-sm">
                     <thead class="bg-gray-100">
                         <tr>

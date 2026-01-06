@@ -86,6 +86,7 @@ $categorias = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categorías - <?php echo APP_NAME; ?></title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
 </head>
 
@@ -96,10 +97,10 @@ $categorias = $stmt->fetchAll();
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
-                <i class="fas fa-tags text-blue-600 mr-2"></i>Gestión de Categorías
+                <i class="fas fa-tags text-gray-600 mr-2"></i>Gestión de Categorías
             </h1>
             <button
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:-translate-y-0.5 flex items-center"
+                class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-none shadow-none transition duration-200 ease-in-out flex items-center"
                 onclick="toggleAddCategoryForm()">
                 <i class="fas fa-plus mr-2"></i>Agregar Categoría
             </button>
@@ -109,7 +110,7 @@ $categorias = $stmt->fetchAll();
 
         <!-- Formulario Agregar Categoría -->
         <div id="addCategoryForm"
-            class="bg-white rounded-xl shadow-lg mb-8 hidden overflow-hidden transition-all duration-300">
+            class="bg-white border border-gray-300 shadow-none mb-8 hidden overflow-hidden transition-all duration-300">
             <div class="p-6 border-b border-gray-100 bg-gray-50">
                 <h3 class="text-xl font-bold text-gray-800">Agregar Nueva Categoría</h3>
             </div>
@@ -130,9 +131,9 @@ $categorias = $stmt->fetchAll();
                     </div>
                     <div class="flex justify-end space-x-3 mt-2">
                         <button type="button" onclick="toggleAddCategoryForm()"
-                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-lg transition duration-200">Cancelar</button>
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-none transition duration-200">Cancelar</button>
                         <button type="submit" name="add_category"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200">Guardar
+                            class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-none shadow-none transition duration-200">Guardar
                             Categoría</button>
                     </div>
                 </form>
@@ -140,7 +141,7 @@ $categorias = $stmt->fetchAll();
         </div>
 
         <!-- Tabla de Categorías -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+        <div class="bg-white border border-gray-300 shadow-none overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -161,7 +162,7 @@ $categorias = $stmt->fetchAll();
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php foreach ($categorias as $cat): ?>
-                            <tr class="hover:bg-blue-50 transition duration-150">
+                            <tr class="hover:bg-gray-50 transition duration-150 border-b border-gray-100">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <?php echo htmlspecialchars($cat['id']); ?>
                                 </td>
@@ -178,13 +179,13 @@ $categorias = $stmt->fetchAll();
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button
-                                        class="text-yellow-600 hover:text-yellow-900 bg-yellow-100 hover:bg-yellow-200 p-2 rounded-lg transition mr-2"
+                                        class="text-gray-600 hover:text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 p-2 transition mr-2"
                                         onclick="editCategory(<?php echo $cat['id']; ?>, '<?php echo addslashes($cat['nombre']); ?>', '<?php echo addslashes($cat['descripcion']); ?>')"
                                         title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button
-                                        class="text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 p-2 rounded-lg transition"
+                                        class="text-red-600 hover:text-red-900 bg-white border border-gray-300 hover:bg-red-50 p-2 transition"
                                         onclick="deleteCategory(<?php echo $cat['id']; ?>, '<?php echo addslashes($cat['nombre']); ?>')"
                                         title="Eliminar">
                                         <i class="fas fa-trash-alt"></i>

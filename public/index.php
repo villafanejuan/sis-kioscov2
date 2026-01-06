@@ -39,15 +39,16 @@ if (isset($_SESSION['flash_message'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?php echo APP_NAME; ?></title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
 </head>
 
-<body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <!-- Logo/Header -->
         <div class="text-center mb-8">
-            <div class="inline-block p-4 bg-blue-100 rounded-full mb-4">
-                <i class="fas fa-store text-4xl text-blue-600"></i>
+            <div class="inline-block p-4 bg-gray-200 rounded-full mb-4">
+                <i class="fas fa-store text-4xl text-gray-800"></i>
             </div>
             <h1 class="text-3xl font-bold text-gray-800"><?php echo APP_NAME; ?></h1>
             <p class="text-gray-600 mt-2">Ingresa tus credenciales para continuar</p>
@@ -92,7 +93,7 @@ if (isset($_SESSION['flash_message'])) {
 
             <!-- Botón Submit -->
             <button type="submit"
-                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                class="w-full bg-gray-900 text-white font-bold py-3 px-4 hover:bg-black transition duration-200 shadow-sm border border-transparent">
                 <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
             </button>
         </form>

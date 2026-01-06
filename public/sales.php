@@ -510,6 +510,7 @@ $productos = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nueva Venta - Sistema Kiosco</title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
     <style>
         /* Chrome, Safari, Edge, Opera */
@@ -575,7 +576,7 @@ $productos = $stmt->fetchAll();
                                 </label>
                                 <div class="relative">
                                     <input type="text" id="scanner_input" placeholder="Escanear producto aquí..." autofocus
-                                        class="w-full pl-4 pr-10 py-3 border-2 border-blue-500 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-mono transition duration-150 ease-in-out">
+                                        class="w-full pl-4 pr-10 py-3 border-2 border-gray-400 rounded-none shadow-none focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-lg font-mono transition duration-150 ease-in-out">
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <i class="fas fa-qrcode text-gray-400 text-xl"></i>
                                     </div>
@@ -590,15 +591,13 @@ $productos = $stmt->fetchAll();
                     $active_promos = getActivePromotions();
                     if (!empty($active_promos)):
                         ?>
-                        <div
-                            class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-lg shadow-md mb-6 border border-purple-100">
-                            <h3 class="text-xl font-bold mb-4 text-purple-800 flex items-center">
-                                <i class="fas fa-tags text-pink-500 mr-2"></i>Promociones Disponibles
+                        <div class="bg-white border border-gray-300 p-6 shadow-none mb-6">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                                <i class="fas fa-tags text-gray-600 mr-2"></i>Promociones Disponibles
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <?php foreach ($active_promos as $promo): ?>
-                                    <div
-                                        class="bg-white p-4 rounded-xl shadow-sm border border-purple-100 hover:shadow-md transition duration-200 transform hover:-translate-y-1">
+                                    <div class="bg-white p-4 border border-gray-300 hover:bg-gray-50 transition duration-200">
                                         <div class="flex justify-between items-start">
                                             <div>
                                                 <h4 class="font-bold text-gray-800">
@@ -609,7 +608,7 @@ $productos = $stmt->fetchAll();
                                                 </p>
 
                                                 <div
-                                                    class="mt-2 inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">
+                                                    class="mt-2 inline-block px-2 py-1 bg-gray-100 border border-gray-300 text-gray-800 text-xs font-bold">
                                                     <?php
                                                     if ($promo['tipo'] == 'descuento_porcentaje')
                                                         echo '-' . floatval($promo['valor']) . '%';
@@ -625,7 +624,7 @@ $productos = $stmt->fetchAll();
 
                                             <?php if (!empty($promo['productos_ids']) || ($promo['tipo'] == 'combo')): ?>
                                                 <button onclick="addPromoToCart(<?php echo $promo['id']; ?>)"
-                                                    class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg shadow-sm transition group"
+                                                    class="bg-gray-800 hover:bg-gray-900 text-white p-2 shadow-none transition group"
                                                     title="Agregar Promoción">
                                                     <i class="fas fa-cart-plus group-hover:scale-110 transform transition"></i>
                                                 </button>
@@ -637,7 +636,7 @@ $productos = $stmt->fetchAll();
                         </div>
                     <?php endif; ?>
 
-                    <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="bg-white p-6 shadow-none border border-gray-300">
                         <h3 class="text-xl font-semibold mb-4">Productos Disponibles</h3>
                         <div class="flex justify-between items-center mb-6 gap-4">
                             <div class="relative flex-1">
@@ -645,7 +644,7 @@ $productos = $stmt->fetchAll();
                                     <i class="fas fa-search text-lg"></i>
                                 </span>
                                 <input type="text" id="search_product" placeholder="Buscar producto por nombre..."
-                                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg transition duration-150 ease-in-out">
+                                    class="w-full pl-10 pr-4 py-3 border border-gray-300 shadow-none focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-lg transition duration-150 ease-in-out">
                             </div>
                             <div class="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
                                 <button onclick="toggleView('grid')" id="btn_grid"
@@ -660,10 +659,10 @@ $productos = $stmt->fetchAll();
                         </div>
                         <div id="products_grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             <?php foreach ($productos as $prod): ?>
-                                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition duration-200 ease-in-out transform hover:-translate-y-1"
+                                <div class="bg-white p-5 border border-gray-300 shadow-none hover:bg-gray-50 transition duration-200 ease-in-out"
                                     data-product-id="<?php echo $prod['id']; ?>">
                                     <div class="flex justify-between items-start mb-2">
-                                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                        <div class="p-2 bg-gray-100 rounded-none text-gray-600">
                                             <i class="fas fa-box"></i>
                                         </div>
                                         <span
@@ -681,19 +680,19 @@ $productos = $stmt->fetchAll();
                                     <div class="flex items-center space-x-2">
                                         <div class="relative flex items-center w-36">
                                             <button type="button" onclick="decrement(this)"
-                                                class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-l-lg p-2 h-10 focus:ring-gray-100 focus:ring-2 focus:outline-none">
+                                                class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border border-gray-300 p-2 h-10 focus:ring-gray-100 focus:ring-2 focus:outline-none">
                                                 <i class="fas fa-minus text-gray-500 w-2"></i>
                                             </button>
                                             <input type="number" value="1" min="1" max="<?php echo $prod['stock']; ?>"
                                                 class="product-quantity flex-1 w-full min-w-0 bg-gray-50 border-x-0 border-gray-300 h-10 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 px-0"
                                                 required>
                                             <button type="button" onclick="increment(this, <?php echo $prod['stock']; ?>)"
-                                                class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-r-lg p-2 h-10 focus:ring-gray-100 focus:ring-2 focus:outline-none">
+                                                class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 border border-gray-300 p-2 h-10 focus:ring-gray-100 focus:ring-2 focus:outline-none">
                                                 <i class="fas fa-plus text-gray-500 w-2"></i>
                                             </button>
                                         </div>
                                         <button type="button"
-                                            class="add-to-cart-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out flex items-center justify-center gap-2"
+                                            class="add-to-cart-btn flex-1 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 shadow-none transition duration-150 ease-in-out flex items-center justify-center gap-2"
                                             data-product-id="<?php echo $prod['id']; ?>">
                                             <i class="fas fa-cart-plus"></i> Agregar
                                         </button>
@@ -771,9 +770,9 @@ $productos = $stmt->fetchAll();
                     </div>
                 </div>
                 <div class="lg:col-span-1">
-                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-100 sticky top-4">
+                    <div class="bg-white p-6 shadow-none border border-gray-300 sticky top-4">
                         <h3 class="text-xl font-bold mb-6 flex items-center text-gray-800">
-                            <i class="fas fa-shopping-cart text-purple-600 mr-2"></i>Carrito
+                            <i class="fas fa-shopping-cart text-gray-600 mr-2"></i>Carrito
                         </h3>
 
                         <!-- Selector de Cliente - SIEMPRE VISIBLE -->
@@ -1197,12 +1196,12 @@ $productos = $stmt->fetchAll();
                 let cartHtml = '<div class="space-y-3 mb-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" id="cart_items">';
                 for (const [productId, item] of Object.entries(data.carrito)) {
                     cartHtml += `
-                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100 group hover:border-blue-200 transition" data-product-id="${productId}">
+                        <div class="flex justify-between items-center p-3 bg-white border-b border-gray-200 group hover:bg-gray-50 transition" data-product-id="${productId}">
                             <div class="flex-1">
                                 <p class="font-semibold text-gray-800">${item.nombre}</p>
                                 <div class="flex items-center text-sm text-gray-500 mt-1">
                                     <span>$${Number(item.precio).toFixed(2)} x </span>
-                                    <input type="number" value="${item.cantidad}" min="1" class="cart-quantity ml-1 w-16 px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-center" data-product-id="${productId}">
+                                    <input type="number" value="${item.cantidad}" min="1" class="cart-quantity ml-1 w-16 px-2 py-1 border border-gray-300 rounded-none focus:ring-gray-800 focus:border-gray-800 text-center" data-product-id="${productId}">
                                 </div>
                             </div>
                             <div class="flex flex-col items-end space-y-1 ml-4">
@@ -1234,21 +1233,21 @@ $productos = $stmt->fetchAll();
                             <label for="amount_paid" class="block text-sm font-medium text-gray-700 mb-1">Monto Pagado</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                                <input type="number" id="amount_paid" name="amount_paid" step="0.01" min="${currentTotal}" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition" placeholder="0.00" oninput="calculateChange()">
+                                <input type="number" id="amount_paid" name="amount_paid" step="0.01" min="${currentTotal}" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition" placeholder="0.00" oninput="calculateChange()">
                             </div>
                             <div class="mt-2 grid grid-cols-4 gap-2">
                                 <button type="button" onclick="addAmount(2000)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs transition border border-gray-200 shadow-sm">$2000</button>
                                 <button type="button" onclick="addAmount(5000)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs transition border border-gray-200 shadow-sm">$5000</button>
                                 <button type="button" onclick="addAmount(10000)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs transition border border-gray-200 shadow-sm">$10000</button>
-                                <button type="button" onclick="addAmount(20000)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs transition border border-gray-200 shadow-sm">$20000</button>
+                                <button type="button" onclick="addAmount(20000)" class="bg-white hover:bg-gray-100 text-gray-800 px-2 py-1 rounded-none transition border border-gray-300 shadow-none">$20000</button>
                             </div>
                         </div>
-                        <div id="change_section" class="flex justify-between items-center py-2 bg-gray-50 px-3 rounded-lg border border-gray-100">
+                        <div id="change_section" class="flex justify-between items-center py-2 bg-gray-50 px-3 border border-gray-200">
                             <span class="text-gray-600 font-medium">Cambio:</span>
                             <span id="change_amount" class="text-gray-400 font-bold">0.00</span>
                         </div>
-                        <button type="submit" name="complete_sale" id="complete_sale_btn" class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition transform active:scale-95 flex items-center justify-center opacity-50 cursor-not-allowed" disabled>
-                            <i class="fas fa-check-circle mr-2"></i>Completar Venta
+                        <button type="submit" name="complete_sale" id="complete_sale_btn" class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-4 shadow-none transition transform flex items-center justify-center opacity-50 cursor-not-allowed" disabled>
+                            <i class="fas fa-check mr-2"></i>Completar Venta
                         </button>
                     </form>
                     <div class="mt-4 text-center">

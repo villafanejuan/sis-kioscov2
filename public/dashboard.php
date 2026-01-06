@@ -94,6 +94,7 @@ $csrf_token = Security::generateCsrf();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - <?php echo APP_NAME; ?></title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
 </head>
 
@@ -160,52 +161,49 @@ $csrf_token = Security::generateCsrf();
             class="grid grid-cols-1 <?php echo $_SESSION['role'] === 'cajero' ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'; ?> gap-6 mb-8">
             <!-- Total Productos (Oculto para Cajero) -->
             <?php if ($_SESSION['role'] !== 'cajero'): ?>
-                <div
-                    class="bg-gradient-to-br from-green-400 to-green-600 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition">
+                <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm opacity-90">Total Productos</p>
+                            <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Total Productos</p>
                             <p class="text-4xl font-bold mt-2"><?php echo $totalProductos; ?></p>
                         </div>
-                        <i class="fas fa-box text-5xl opacity-30"></i>
+                        <i class="fas fa-box text-5xl text-gray-200"></i>
                     </div>
                 </div>
             <?php endif; ?>
 
             <!-- Ventas Hoy -->
-            <div
-                class="bg-gradient-to-br from-blue-400 to-blue-600 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition">
+            <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm opacity-90">Ventas Hoy (Global)</p>
+                        <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Ventas Hoy (Global)</p>
                         <p class="text-4xl font-bold mt-2"><?php echo $ventasHoy; ?></p>
                     </div>
-                    <i class="fas fa-shopping-cart text-5xl opacity-30"></i>
+                    <i class="fas fa-shopping-cart text-5xl text-gray-200"></i>
                 </div>
             </div>
 
             <!-- Ingresos Hoy -->
-            <div
-                class="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition">
+            <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm opacity-90">Ingresos Hoy (Global)</p>
+                        <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Ingresos Hoy (Global)
+                        </p>
                         <p class="text-4xl font-bold mt-2">$<?php echo number_format($ingresosHoy, 0); ?></p>
                     </div>
-                    <i class="fas fa-dollar-sign text-5xl opacity-30"></i>
+                    <i class="fas fa-dollar-sign text-5xl text-gray-200"></i>
                 </div>
             </div>
 
             <!-- Stock Bajo (Oculto para Cajero) -->
             <?php if ($_SESSION['role'] !== 'cajero'): ?>
-                <div
-                    class="bg-gradient-to-br from-red-400 to-red-600 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition">
+                <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm opacity-90">Stock Bajo</p>
+                            <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Stock Bajo</p>
                             <p class="text-4xl font-bold mt-2"><?php echo $productosStockBajo; ?></p>
                         </div>
-                        <i class="fas fa-exclamation-triangle text-5xl opacity-30"></i>
+                        <i class="fas fa-exclamation-triangle text-5xl text-gray-200"></i>
                     </div>
                 </div>
             <?php endif; ?>
@@ -297,32 +295,32 @@ $csrf_token = Security::generateCsrf();
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <?php if (canAccess('sales')): ?>
                     <a href="sales.php"
-                        class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-shopping-cart text-3xl mb-2"></i>
+                        class="bg-white border border-gray-300 text-gray-800 p-6 text-center hover:bg-gray-50 transition shadow-none">
+                        <i class="fas fa-shopping-cart text-3xl mb-2 text-gray-600"></i>
                         <p class="font-bold">Nueva Venta</p>
                     </a>
                 <?php endif; ?>
 
                 <?php if (canAccess('products')): ?>
                     <a href="products.php"
-                        class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-box text-3xl mb-2"></i>
+                        class="bg-white border border-gray-300 text-gray-800 p-6 text-center hover:bg-gray-50 transition shadow-none">
+                        <i class="fas fa-box text-3xl mb-2 text-gray-600"></i>
                         <p class="font-bold">Productos</p>
                     </a>
                 <?php endif; ?>
 
                 <?php if (canAccess('cash')): ?>
                     <a href="cash.php"
-                        class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg text-center hover:from-purple-600 hover:to-purple-700 transition transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-cash-register text-3xl mb-2"></i>
+                        class="bg-white border border-gray-300 text-gray-800 p-6 text-center hover:bg-gray-50 transition shadow-none">
+                        <i class="fas fa-cash-register text-3xl mb-2 text-gray-600"></i>
                         <p class="font-bold">Caja</p>
                     </a>
                 <?php endif; ?>
 
                 <?php if (canAccess('reports')): ?>
                     <a href="reports.php"
-                        class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg text-center hover:from-orange-600 hover:to-orange-700 transition transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-chart-bar text-3xl mb-2"></i>
+                        class="bg-white border border-gray-300 text-gray-800 p-6 text-center hover:bg-gray-50 transition shadow-none">
+                        <i class="fas fa-chart-bar text-3xl mb-2 text-gray-600"></i>
                         <p class="font-bold">Reportes</p>
                     </a>
                 <?php endif; ?>

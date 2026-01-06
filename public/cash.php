@@ -327,6 +327,7 @@ if ($isAuditor) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Caja - <?php echo APP_NAME; ?></title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
 </head>
 
@@ -338,7 +339,7 @@ if ($isAuditor) {
         <!-- Título -->
         <div class="mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-2">
-                <i class="fas fa-cash-register text-purple-600 mr-3"></i>Gestión de Caja
+                <i class="fas fa-cash-register text-gray-600 mr-3"></i>Gestión de Caja
             </h1>
             <p class="text-gray-600">
                 <?php if ($isAdmin): ?>
@@ -354,7 +355,7 @@ if ($isAuditor) {
         <!-- Mensajes -->
         <?php if ($message): ?>
             <div
-                class="mb-6 p-4 rounded-lg <?php echo $messageType == 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'; ?> border-l-4">
+                class="mb-6 p-4 rounded-none <?php echo $messageType == 'success' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-red-50 border-red-500 text-red-800'; ?> border border-l-4">
                 <i class="fas <?php echo $messageType == 'success' ? 'fa-check-circle' : 'fa-times-circle'; ?> mr-2"></i>
                 <?php echo $message; ?>
             </div>
@@ -364,52 +365,52 @@ if ($isAuditor) {
         <?php if ($isAuditor): ?>
             <!-- Global Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-blue-500">
+                <div class="bg-white p-6 border border-gray-300 shadow-none border-b-4 border-blue-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Cajas Abiertas</p>
                             <p class="text-3xl font-bold text-gray-800"><?php echo $globalStats['active_shifts']; ?></p>
                         </div>
-                        <i class="fas fa-users text-blue-200 text-4xl"></i>
+                        <i class="fas fa-users text-gray-200 text-4xl"></i>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-green-500">
+                <div class="bg-white p-6 border border-gray-300 shadow-none border-b-4 border-green-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Saldo Global (Vivo)</p>
-                            <p class="text-3xl font-bold text-green-600">
+                            <p class="text-3xl font-bold text-green-700">
                                 $<?php echo number_format($globalStats['current_balance'], 2); ?></p>
                         </div>
-                        <i class="fas fa-chart-line text-green-200 text-4xl"></i>
+                        <i class="fas fa-chart-line text-gray-200 text-4xl"></i>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-emerald-500">
+                <div class="bg-white p-6 border border-gray-300 shadow-none border-b-4 border-emerald-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Ingresos Activos</p>
                             <p class="text-2xl font-bold text-gray-700">
                                 +$<?php echo number_format($globalStats['total_income'], 2); ?></p>
                         </div>
-                        <i class="fas fa-arrow-up text-emerald-200 text-3xl"></i>
+                        <i class="fas fa-arrow-up text-gray-200 text-3xl"></i>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-red-500">
+                <div class="bg-white p-6 border border-gray-300 shadow-none border-b-4 border-red-500">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Egresos Activos</p>
                             <p class="text-2xl font-bold text-gray-700">
                                 -$<?php echo number_format($globalStats['total_outcome'], 2); ?></p>
                         </div>
-                        <i class="fas fa-arrow-down text-red-200 text-3xl"></i>
+                        <i class="fas fa-arrow-down text-gray-200 text-3xl"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Historial Full Width -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="bg-white p-6 border border-gray-300 shadow-none">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">
-                        <i class="fas fa-history text-orange-600 mr-2"></i>Historial Global de Turnos
+                        <i class="fas fa-history text-gray-600 mr-2"></i>Historial Global de Turnos
                     </h3>
                     <form method="GET" class="flex gap-2">
                         <select name="user_filter" onchange="this.form.submit()"
@@ -433,7 +434,7 @@ if ($isAuditor) {
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <?php foreach ($historial as $turno): ?>
                             <div
-                                class="bg-white border rounded-lg p-4 hover:shadow-md transition duration-200 relative overflow-hidden group">
+                                class="bg-white border rounded-none p-4 hover:bg-gray-50 transition duration-200 relative overflow-hidden group border-gray-200">
                                 <div class="absolute top-0 right-0 p-2">
                                     <span
                                         class="px-2 py-1 rounded text-xs font-bold uppercase tracking-wide <?php echo $turno['estado'] == 'abierto' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'; ?>">
@@ -489,7 +490,7 @@ if ($isAuditor) {
                                 <?php endif; ?>
 
                                 <button onclick="verDetalles(<?php echo $turno['id']; ?>)"
-                                    class="mt-3 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium py-2 rounded text-sm transition">
+                                    class="mt-3 w-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded-none text-sm transition">
                                     Ver Detalles
                                 </button>
                             </div>
@@ -502,35 +503,35 @@ if ($isAuditor) {
         <?php else: ?>
             <!-- Estado del Turno Actual -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div
-                    class="bg-gradient-to-br from-<?php echo $turnoActivo ? 'green' : 'gray'; ?>-500 to-<?php echo $turnoActivo ? 'green' : 'gray'; ?>-600 text-white p-6 rounded-xl shadow-lg">
+                <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm opacity-90">Estado</p>
+                            <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Estado</p>
                             <p class="text-2xl font-bold"><?php echo $turnoActivo ? 'TURNO ABIERTO' : 'SIN TURNO'; ?></p>
                         </div>
-                        <i class="fas fa-<?php echo $turnoActivo ? 'door-open' : 'door-closed'; ?> text-4xl opacity-75"></i>
+                        <i
+                            class="fas fa-<?php echo $turnoActivo ? 'door-open' : 'door-closed'; ?> text-4xl text-gray-200"></i>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+                <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm opacity-90">Monto Inicial</p>
+                            <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Monto Inicial</p>
                             <p class="text-2xl font-bold">
                                 $<?php echo number_format($turnoActivo['monto_inicial'] ?? 0, 2); ?></p>
                         </div>
-                        <i class="fas fa-coins text-4xl opacity-75"></i>
+                        <i class="fas fa-coins text-4xl text-gray-200"></i>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+                <div class="bg-white border border-gray-300 text-gray-800 p-6 shadow-none">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm opacity-90">Total Actual</p>
+                            <p class="text-sm font-semibold uppercase tracking-wider text-gray-500">Total Actual</p>
                             <p class="text-2xl font-bold">$<?php echo number_format($totalActual, 2); ?></p>
                         </div>
-                        <i class="fas fa-wallet text-4xl opacity-75"></i>
+                        <i class="fas fa-wallet text-4xl text-gray-200"></i>
                     </div>
                 </div>
             </div>
@@ -540,9 +541,9 @@ if ($isAuditor) {
                 <div class="space-y-6">
                     <?php if (!$turnoActivo): ?>
                         <!-- Abrir Turno -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-xl font-semibold mb-4 text-green-700">
-                                <i class="fas fa-door-open mr-2"></i>Abrir Mi Turno
+                        <div class="bg-white p-6 border border-gray-300 shadow-none">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-door-open mr-2 text-gray-500"></i>Abrir Mi Turno
                             </h3>
                             <form method="POST">
                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
@@ -557,16 +558,16 @@ if ($isAuditor) {
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
                                 </div>
                                 <button type="submit" name="abrir_turno"
-                                    class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                                    class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-4 rounded-none transition shadow-none">
                                     <i class="fas fa-door-open mr-2"></i>Abrir Turno
                                 </button>
                             </form>
                         </div>
                     <?php else: ?>
                         <!-- Registrar Movimiento -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-xl font-semibold mb-4 text-blue-700">
-                                <i class="fas fa-exchange-alt mr-2"></i>Registrar Movimiento
+                        <div class="bg-white p-6 border border-gray-300 shadow-none">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-exchange-alt mr-2 text-gray-500"></i>Registrar Movimiento
                             </h3>
                             <form method="POST">
                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
@@ -590,16 +591,16 @@ if ($isAuditor) {
                                         placeholder="Ej: Pago a proveedor, Cobro de deuda, etc."></textarea>
                                 </div>
                                 <button type="submit" name="registrar_movimiento"
-                                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                                    class="w-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 font-bold py-3 px-4 rounded-none transition shadow-none">
                                     <i class="fas fa-plus mr-2"></i>Agregar Movimiento
                                 </button>
                             </form>
                         </div>
 
                         <!-- Cerrar Turno -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-xl font-semibold mb-4 text-red-700">
-                                <i class="fas fa-door-closed mr-2"></i>Cerrar Mi Turno
+                        <div class="bg-white p-6 border border-gray-300 shadow-none">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                                <i class="fas fa-door-closed mr-2 text-gray-500"></i>Cerrar Mi Turno
                             </h3>
                             <form method="POST"
                                 onsubmit="return confirm('¿Estás seguro de cerrar el turno? Esta acción no se puede deshacer.');">
@@ -608,7 +609,7 @@ if ($isAuditor) {
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Monto Real Contado *</label>
                                     <input type="number" name="monto_final" step="0.01" required
-                                        class="w-full px-4 py-2 border border-blue-100 bg-blue-50 rounded-lg focus:ring-2 focus:ring-red-500 text-lg font-bold text-gray-800 placeholder-gray-400"
+                                        class="w-full px-4 py-2 border border-gray-300 bg-gray-50 rounded-none focus:ring-2 focus:ring-gray-500 text-lg font-bold text-gray-800 placeholder-gray-400"
                                         placeholder="0.00">
                                     <p class="text-xs text-gray-500 mt-1">Ingresa el total exacto de dinero físico en caja.</p>
                                 </div>
@@ -618,7 +619,7 @@ if ($isAuditor) {
                                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
                                 </div>
                                 <button type="submit" name="cerrar_turno"
-                                    class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                                    class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-4 rounded-none transition shadow-none">
                                     <i class="fas fa-door-closed mr-2"></i>Cerrar Turno
                                 </button>
                             </form>
@@ -630,17 +631,17 @@ if ($isAuditor) {
                 <div class="space-y-6">
                     <!-- Movimientos del Turno Actual -->
                     <?php if ($turnoActivo): ?>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="bg-white p-6 border border-gray-300 shadow-none">
                             <h3 class="text-xl font-semibold mb-4">
-                                <i class="fas fa-list text-purple-600 mr-2"></i>Movimientos del Turno
+                                <i class="fas fa-list text-gray-600 mr-2"></i>Movimientos del Turno
                             </h3>
                             <?php if (empty($movimientos)): ?>
                                 <p class="text-gray-500 text-center py-8">No hay movimientos registrados</p>
                             <?php else: ?>
                                 <div class="space-y-2 max-h-96 overflow-y-auto">
                                     <?php foreach ($movimientos as $mov): ?>
-                                        <div class="p-3 bg-gray-50 rounded-lg border-l-4 <?php
-                                        echo $mov['tipo'] == 'ingreso' || $mov['tipo'] == 'venta' || $mov['tipo'] == 'inicial' ? 'border-green-500' : 'border-red-500';
+                                        <div class="p-3 bg-white border-b border-gray-100 <?php
+                                        echo $mov['tipo'] == 'ingreso' || $mov['tipo'] == 'venta' || $mov['tipo'] == 'inicial' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500';
                                         ?>">
                                             <div class="flex justify-between items-start">
                                                 <div class="flex-1">
@@ -665,10 +666,10 @@ if ($isAuditor) {
                     <?php endif; ?>
 
                     <!-- Historial de Turnos -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="bg-white p-6 border border-gray-300 shadow-none">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-semibold">
-                                <i class="fas fa-history text-orange-600 mr-2"></i>
+                                <i class="fas fa-history text-gray-600 mr-2"></i>
                                 <?php
                                 if ($isAdmin || $userRole === 'cajero') {
                                     echo 'Historial de Todos los Turnos';
@@ -697,7 +698,7 @@ if ($isAuditor) {
                         <?php else: ?>
                             <div class="space-y-2 max-h-96 overflow-y-auto">
                                 <?php foreach ($historial as $turno): ?>
-                                    <div class="p-4 bg-gray-50 rounded-lg transition hover:bg-gray-100">
+                                    <div class="p-4 bg-white border hover:bg-gray-50 transition border-gray-200">
                                         <div class="flex items-center justify-between mb-3">
                                             <div class="flex items-center space-x-2">
                                                 <span class="font-bold text-gray-800">

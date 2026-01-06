@@ -150,6 +150,7 @@ $categorias = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos - Sistema Kiosco</title>
     <script src="assets/js/tailwindcss.js"></script>
+    <script src="assets/js/theme-config.js"></script>
     <link href="assets/css/fontawesome.min.css" rel="stylesheet">
 </head>
 
@@ -160,20 +161,20 @@ $categorias = $stmt->fetchAll();
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
-                <i class="fas fa-boxes text-blue-600 mr-2"></i>Gestión de Productos
+                <i class="fas fa-boxes text-gray-600 mr-2"></i>Gestión de Productos
             </h1>
             <div class="flex items-center gap-4">
                 <?php if ($is_admin): ?>
                     <!-- Toggle para mostrar productos eliminados (solo admin) -->
                     <a href="?show_deleted=<?php echo $show_deleted ? '0' : '1'; ?>"
-                        class="<?php echo $show_deleted ? 'bg-gray-600 hover:bg-gray-700' : 'bg-purple-600 hover:bg-purple-700'; ?> text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:-translate-y-0.5 flex items-center">
+                        class="<?php echo $show_deleted ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-800 hover:bg-gray-900'; ?> text-white font-semibold py-2 px-6 rounded-none shadow-none transition duration-200 ease-in-out flex items-center">
                         <i class="fas <?php echo $show_deleted ? 'fa-eye-slash' : 'fa-trash-restore'; ?> mr-2"></i>
                         <?php echo $show_deleted ? 'Ocultar Eliminados' : 'Ver Eliminados'; ?>
                     </a>
                 <?php endif; ?>
                 <?php if ($can_manage_products): ?>
                     <button
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:-translate-y-0.5 flex items-center"
+                        class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-none shadow-none transition duration-200 ease-in-out flex items-center"
                         onclick="toggleAddProductForm()">
                         <i class="fas fa-plus mr-2"></i>Agregar Producto
                     </button>
@@ -185,7 +186,7 @@ $categorias = $stmt->fetchAll();
 
         <!-- Formulario Agregar Producto -->
         <div id="addProductForm"
-            class="bg-white rounded-xl shadow-lg mb-8 hidden overflow-hidden transition-all duration-300">
+            class="bg-white border border-gray-300 shadow-none mb-8 hidden overflow-hidden transition-all duration-300">
             <div class="p-6 border-b border-gray-100 bg-gray-50">
                 <h3 class="text-xl font-bold text-gray-800">Agregar Nuevo Producto</h3>
             </div>
@@ -248,7 +249,7 @@ $categorias = $stmt->fetchAll();
                         <button type="button" onclick="toggleAddProductForm()"
                             class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-lg transition duration-200">Cancelar</button>
                         <button type="submit" name="add_product"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200">Guardar
+                            class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-none shadow-none transition duration-200">Guardar
                             Producto</button>
                     </div>
                 </form>
@@ -256,7 +257,7 @@ $categorias = $stmt->fetchAll();
         </div>
 
         <!-- Tabla de Productos -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+        <div class="bg-white border border-gray-300 shadow-none overflow-x-auto">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -293,7 +294,7 @@ $categorias = $stmt->fetchAll();
                         <?php foreach ($productos as $prod): ?>
                             <?php $is_deleted = !empty($prod['deleted_at']); ?>
                             <tr
-                                class="<?php echo $is_deleted ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-blue-50'; ?> transition duration-150">
+                                class="<?php echo $is_deleted ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'; ?> transition duration-150 border-b border-gray-100">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div
                                         class="text-sm font-bold <?php echo $is_deleted ? 'text-gray-500' : 'text-gray-900'; ?>">
@@ -323,7 +324,7 @@ $categorias = $stmt->fetchAll();
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
-                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        class="px-2 py-1 inline-flex text-xs leading-5 font-semibold bg-gray-100 text-gray-800 border border-gray-300">
                                         <?php echo htmlspecialchars($prod['categoria'] ?? 'Sin categoría'); ?>
                                     </span>
                                 </td>
@@ -336,7 +337,7 @@ $categorias = $stmt->fetchAll();
                                     $stockClass = $prod['stock'] > 10 ? 'bg-green-100 text-green-800' : ($prod['stock'] > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800');
                                     ?>
                                     <span
-                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $stockClass; ?>">
+                                        class="px-2 py-1 inline-flex text-xs leading-5 font-semibold <?php echo $stockClass; ?> border border-gray-200">
                                         <?php echo htmlspecialchars($prod['stock']); ?>
                                     </span>
                                 </td>
@@ -356,13 +357,13 @@ $categorias = $stmt->fetchAll();
                                         <!-- Producto activo: mostrar botones normales -->
                                         <?php if ($can_manage_products): ?>
                                             <button
-                                                class="text-yellow-600 hover:text-yellow-900 bg-yellow-100 hover:bg-yellow-200 p-2 rounded-lg transition mr-2"
+                                                class="text-gray-600 hover:text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 p-2 transition mr-2"
                                                 onclick="editProduct(<?php echo $prod['id']; ?>, '<?php echo addslashes($prod['nombre']); ?>', '<?php echo addslashes($prod['descripcion']); ?>', <?php echo $prod['precio']; ?>, <?php echo $prod['stock']; ?>, <?php echo $prod['categoria_id']; ?>, '<?php echo addslashes($prod['codigo_barra'] ?? ''); ?>')"
                                                 title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button
-                                                class="text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 p-2 rounded-lg transition"
+                                                class="text-red-600 hover:text-red-900 bg-white border border-gray-300 hover:bg-red-50 p-2 transition"
                                                 onclick="deleteProduct(<?php echo $prod['id']; ?>, '<?php echo addslashes($prod['nombre']); ?>')"
                                                 title="Eliminar">
                                                 <i class="fas fa-trash-alt"></i>
