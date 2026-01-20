@@ -104,6 +104,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
                     $message = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">' . $error_msg . '</div>';
                 }
             }
+        } elseif (isset($_POST['add_manual_to_cart'])) {
+            $monto = floatval($_POST['monto']);
+            $descripcion = trim($_POST['descripcion']);
+            $cantidad = intval($_POST['cantidad']) > 0 ? intval($_POST['cantidad']) : 1;
+
+            if ($monto <= 0) {
+                echo json_encode(['success' => false, 'message' => 'El monto debe ser mayor a 0.']);
+                exit;
+            }
+
+            if (empty($descripcion)) {
+                $descripcion = 'Varios';
+            }
+
+            // Usamos un ID negativo o con prefijo para diferenciar
+            // Pero como la key del array suele ser ID, usaremos un string único
+            $manual_id = 'manual_' . time() . '_' . rand(100, 999);
+
+            $carrito[$manual_id] = [
+                'id' => $manual_id,
+                'nombre' => $descripcion,
+                'precio' => $monto,
+                'cantidad' => $cantidad,
+                'is_manual' => true
+            ];
+
+            $_SESSION['carrito'] = $carrito;
+
+            // Recalcular
+            $calc = applyPromotions($carrito);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Item manual agregado.',
+                'carrito' => $carrito,
+                'total_carrito' => $calc['total_final']
+            ]);
+            exit;
         } elseif (isset($_POST['add_promo_to_cart'])) {
             $promo_id = intval($_POST['promocion_id']);
             $stmt = $pdo->prepare("SELECT * FROM promociones WHERE id = ?");
@@ -221,8 +259,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
                 exit;
             }
         } elseif (isset($_POST['remove_from_cart'])) {
-            $producto_id = intval($_POST['producto_id']);
-            if ($producto_id > 0) {
+            $producto_id = $_POST['producto_id'];
+            // Permitir IDs manuales (strings) o numéricos
+            if ($producto_id) {
                 unset($carrito[$producto_id]);
                 $_SESSION['carrito'] = $carrito;
                 if ($is_ajax) {
@@ -236,13 +275,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
                 }
             }
         } elseif (isset($_POST['update_quantity'])) {
-            $producto_id = intval($_POST['producto_id']);
+            $producto_id = $_POST['producto_id'];
             $cantidad = intval($_POST['cantidad']);
-            if ($producto_id > 0) {
-                $stmt = $pdo->prepare("SELECT stock FROM productos WHERE id = ?");
-                $stmt->execute([$producto_id]);
-                $producto = $stmt->fetch();
-                if ($producto && $cantidad <= $producto['stock']) {
+
+            if ($producto_id) {
+                // Verificar si es manual
+                $is_manual = strpos($producto_id, 'manual_') === 0;
+
+                if ($is_manual) {
+                    // Item manual: Sin stock check
                     if ($cantidad > 0) {
                         $carrito[$producto_id]['cantidad'] = $cantidad;
                     } else {
@@ -259,14 +300,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
                         exit;
                     }
                 } else {
-                    $error_msg = 'La cantidad solicitada excede el stock disponible.';
-                    if ($is_ajax) {
-                        echo json_encode(['success' => false, 'message' => $error_msg]);
-                        exit;
+                    // Item normal: Check Stock
+                    $pid_int = intval($producto_id);
+                    $stmt = $pdo->prepare("SELECT stock FROM productos WHERE id = ?");
+                    $stmt->execute([$pid_int]);
+                    $producto = $stmt->fetch();
+
+                    if ($producto && $cantidad <= $producto['stock']) {
+                        if ($cantidad > 0) {
+                            $carrito[$pid_int]['cantidad'] = $cantidad;
+                        } else {
+                            unset($carrito[$pid_int]);
+                        }
+                        $_SESSION['carrito'] = $carrito;
+                        if ($is_ajax) {
+                            $calc = applyPromotions($carrito);
+                            echo json_encode([
+                                'success' => true,
+                                'carrito' => $carrito,
+                                'total_carrito' => $calc['total_final']
+                            ]);
+                            exit;
+                        }
+                    } else {
+                        $error_msg = 'La cantidad solicitada excede el stock disponible.';
+                        if ($is_ajax) {
+                            echo json_encode(['success' => false, 'message' => $error_msg]);
+                            exit;
+                        }
+                        $message = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">' . $error_msg . '</div>';
                     }
-                    $message = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">' . $error_msg . '</div>';
                 }
             }
+
         } elseif (isset($_POST['clear_cart'])) {
             unset($_SESSION['carrito']);
             $carrito = [];
@@ -287,6 +353,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
 
                 $stock_insufficient = false;
                 foreach ($carrito as $item) {
+                    // Si es item manual, no verificamos stock en BD
+                    if (isset($item['is_manual']) && $item['is_manual']) {
+                        continue;
+                    }
+
                     // Verificar stock actual antes de vender
                     $stmt = $pdo->prepare("SELECT stock FROM productos WHERE id = ?");
                     $stmt->execute([$item['id']]);
@@ -330,11 +401,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
 
                             // Insertar detalles de venta y actualizar stock
                             foreach ($carrito as $item) {
-                                $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal) VALUES (?, ?, ?, ?, ?)");
-                                $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad']]);
+                                if (isset($item['is_manual']) && $item['is_manual']) {
+                                    // Item Manual: No hay producto_id, guardamos descripción, NO tocamos stock
+                                    $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal, descripcion) VALUES (?, NULL, ?, ?, ?, ?)");
+                                    $stmt->execute([$venta_id, $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad'], $item['nombre']]);
+                                } else {
+                                    // Item Normal
+                                    $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal, descripcion) VALUES (?, ?, ?, ?, ?, ?)");
+                                    $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad'], $item['nombre']]);
 
-                                $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
-                                $stmt->execute([$item['cantidad'], $item['id']]);
+                                    $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
+                                    $stmt->execute([$item['cantidad'], $item['id']]);
+                                }
                             }
 
                             // 1. Actualizar saldo del cliente (SOLO LA DEUDA)
@@ -397,11 +475,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
 
                             // Insertar detalles
                             foreach ($carrito as $item) {
-                                $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal) VALUES (?, ?, ?, ?, ?)");
-                                $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad']]);
+                                if (isset($item['is_manual']) && $item['is_manual']) {
+                                    // Item Manual
+                                    $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal, descripcion) VALUES (?, NULL, ?, ?, ?, ?)");
+                                    $stmt->execute([$venta_id, $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad'], $item['nombre']]);
+                                } else {
+                                    // Item Normal
+                                    $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal, descripcion) VALUES (?, ?, ?, ?, ?, ?)");
+                                    $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad'], $item['nombre']]);
 
-                                $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
-                                $stmt->execute([$item['cantidad'], $item['id']]);
+                                    $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
+                                    $stmt->execute([$item['cantidad'], $item['id']]);
+                                }
                             }
 
                             // Registrar Pago Transferencia (ID 4 o busca por nombre)
@@ -452,18 +537,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$turnoAbierto) {
 
                             // Insertar detalles de venta y actualizar stock
                             foreach ($carrito as $item) {
-                                $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal) VALUES (?, ?, ?, ?, ?)");
-                                $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad']]);
+                                if (isset($item['is_manual']) && $item['is_manual']) {
+                                    // Item Manual: No hay producto_id, guardamos descripción, NO tocamos stock
+                                    $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal, descripcion) VALUES (?, NULL, ?, ?, ?, ?)");
+                                    $stmt->execute([$venta_id, $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad'], $item['nombre']]);
+                                } else {
+                                    // Item Normal
+                                    $stmt = $pdo->prepare("INSERT INTO venta_detalles (venta_id, producto_id, cantidad, precio, subtotal, descripcion) VALUES (?, ?, ?, ?, ?, ?)");
+                                    // Descripción = nombre del producto (redundante pero útil si cambia nombre base) o NULL
+                                    $stmt->execute([$venta_id, $item['id'], $item['cantidad'], $item['precio'], $item['precio'] * $item['cantidad'], $item['nombre']]);
 
-                                $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
-                                $stmt->execute([$item['cantidad'], $item['id']]);
+                                    $stmt = $pdo->prepare("UPDATE productos SET stock = stock - ? WHERE id = ?");
+                                    $stmt->execute([$item['cantidad'], $item['id']]);
+                                }
                             }
 
                             // Registrar pago en efectivo
                             $stmt = $pdo->prepare("INSERT INTO venta_pagos (venta_id, metodo_pago_id, monto) VALUES (?, (SELECT id FROM metodos_pago WHERE nombre = 'Efectivo' LIMIT 1), ?)");
                             $stmt->execute([$venta_id, $amount_paid]);
 
-                            if ($turnoAbierto) {
+                            if (isset($turnoAbierto) && $turnoAbierto) {
                                 $stmt = $pdo->prepare("INSERT INTO movimientos_caja (turno_id, tipo, monto, descripcion, venta_id, created_at, usuario_id, fecha) VALUES (?, 'venta', ?, ?, ?, NOW(), ?, NOW())");
                                 $stmt->execute([$turnoAbierto['id'], $total, 'Venta #' . $venta_id, $venta_id, $_SESSION['user_id']]);
                             }
@@ -638,23 +731,29 @@ $productos = $stmt->fetchAll();
 
                     <div class="bg-white p-6 shadow-none border border-gray-300">
                         <h3 class="text-xl font-semibold mb-4">Productos Disponibles</h3>
-                        <div class="flex justify-between items-center mb-6 gap-4">
-                            <div class="relative flex-1">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <div class="relative flex-1 w-full">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                                     <i class="fas fa-search text-lg"></i>
                                 </span>
                                 <input type="text" id="search_product" placeholder="Buscar producto por nombre..."
                                     class="w-full pl-10 pr-4 py-3 border border-gray-300 shadow-none focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-lg transition duration-150 ease-in-out">
                             </div>
-                            <div class="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
-                                <button onclick="toggleView('grid')" id="btn_grid"
-                                    class="p-2 rounded-md bg-white text-blue-600 shadow-sm transition">
-                                    <i class="fas fa-th-large text-xl"></i>
+                            <div class="flex gap-2">
+                                <button onclick="openManualItemModal()"
+                                    class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-4 rounded shadow transition flex items-center gap-2 whitespace-nowrap">
+                                    <i class="fas fa-plus-circle"></i> Ingreso Rápido $$
                                 </button>
-                                <button onclick="toggleView('list')" id="btn_list"
-                                    class="p-2 rounded-md text-gray-400 hover:text-gray-600 transition">
-                                    <i class="fas fa-list text-xl"></i>
-                                </button>
+                                <div class="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
+                                    <button onclick="toggleView('grid')" id="btn_grid"
+                                        class="p-2 rounded-md bg-white text-blue-600 shadow-sm transition">
+                                        <i class="fas fa-th-large text-xl"></i>
+                                    </button>
+                                    <button onclick="toggleView('list')" id="btn_list"
+                                        class="p-2 rounded-md text-gray-400 hover:text-gray-600 transition">
+                                        <i class="fas fa-list text-xl"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div id="products_grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -1575,6 +1674,102 @@ $productos = $stmt->fetchAll();
                 }
             });
         }
+    </script>
+    <!-- Modal Ingreso Manual -->
+    <div id="manualItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 w-full max-w-md shadow-2xl transform transition-all scale-100">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
+                <i class="fas fa-hand-holding-usd mr-2 text-gray-800"></i>Ingreso Rápido
+            </h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Monto ($) <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" id="manual_monto"
+                        class="w-full px-4 py-3 text-2xl font-bold text-gray-900 border-2 border-gray-800 rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-300"
+                        placeholder="0.00" autofocus>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Descripción (Opcional)</label>
+                    <input type="text" id="manual_desc"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        placeholder="Ej: Pan, Fiambre, Varios...">
+                    <p class="text-xs text-gray-500 mt-1">Si se deja vacío, se guardará como "Item Manual".</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="closeManualItemModal()"
+                    class="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium transition">Cancelar</button>
+                <button onclick="addManualItem()"
+                    class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black font-bold shadow-lg transform hover:-translate-y-0.5 transition">Agregar
+                    al Carrito</button>
+            </div>
+        </div>
+    </div>
+
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
+    <script>
+        function openManualItemModal() {
+            document.getElementById('manualItemModal').classList.remove('hidden');
+            document.getElementById('manual_monto').value = '';
+            document.getElementById('manual_desc').value = '';
+            setTimeout(() => document.getElementById('manual_monto').focus(), 100);
+        }
+
+        function closeManualItemModal() {
+            document.getElementById('manualItemModal').classList.add('hidden');
+        }
+
+        function addManualItem() {
+            const monto = parseFloat(document.getElementById('manual_monto').value);
+            const desc = document.getElementById('manual_desc').value;
+
+            if (!monto || monto <= 0) {
+                alert("Por favor ingresa un monto válido.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('add_manual_to_cart', '1');
+            formData.append('monto', monto);
+            formData.append('descripcion', desc);
+            formData.append('cantidad', 1);
+            formData.append('csrf_token', document.getElementById('csrf_token').value);
+            formData.append('ajax', '1');
+
+            fetch('sales.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        closeManualItemModal();
+                        updateCartUI(data); // Fixed: Check signature in other calls
+                        showNotification('success', data.message);
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        // Allow Enter key to submit in modal
+        document.getElementById('manual_monto').addEventListener('keyup', function (e) {
+            if (e.key === 'Enter') {
+                if (this.value && parseFloat(this.value) > 0) {
+                    document.getElementById('manual_desc').focus();
+                }
+            }
+        });
+        document.getElementById('manual_desc').addEventListener('keyup', function (e) {
+            if (e.key === 'Enter') {
+                addManualItem();
+            }
+        });
     </script>
 </body>
 

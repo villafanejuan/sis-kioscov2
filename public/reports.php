@@ -323,7 +323,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
             v.id as id,
             v.fecha as fecha,
             COALESCE(u.nombre, u.username) as usuario,
-            GROUP_CONCAT(CONCAT(p.nombre, ' (', vd.cantidad, ')') SEPARATOR ', ') as detalle,
+            GROUP_CONCAT(COALESCE(p.nombre, vd.descripcion, 'Varios') SEPARATOR ', ') as detalle,
             'venta' as tipo,
             v.total as total_ft,
             LEAST(v.total, v.monto_pagado) as pagado,
@@ -334,7 +334,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
         FROM ventas v
         LEFT JOIN usuarios u ON v.usuario_id = u.id
         JOIN venta_detalles vd ON v.id = vd.venta_id
-        JOIN productos p ON vd.producto_id = p.id
+        LEFT JOIN productos p ON vd.producto_id = p.id
         $whereClauseVentas $dateWhereV
         GROUP BY v.id)
 
