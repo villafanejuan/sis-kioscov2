@@ -122,32 +122,33 @@ $proveedores = $pdo->query($sql)->fetchAll();
 
         <!-- HEADER -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">
-                <i class="fas fa-truck text-blue-600 mr-2"></i>Gestión de Proveedores
+            <h1 class="text-3xl font-bold text-gray-900">
+                <i class="fas fa-truck text-gray-700 mr-2"></i>Gestión de Proveedores
             </h1>
             <div class="flex gap-3">
                 <?php if ($isAdmin): ?>
                     <a href="?show_inactive=<?php echo $showInactive ? 0 : 1; ?>"
-                        class="bg-gray-600 text-white px-4 py-2 rounded-lg">
+                        class="bg-white border border-gray-400 text-gray-800 px-4 py-2 rounded-sm hover:bg-gray-100 transition shadow-sm">
                         <i class="fas fa-eye<?php echo $showInactive ? '-slash' : ''; ?> mr-2"></i>
                         <?php echo $showInactive ? 'Ocultar Inactivos' : 'Ver Inactivos'; ?>
                     </a>
                 <?php endif; ?>
                 <button onclick="toggleAddForm()"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    class="bg-gray-900 text-white px-4 py-2 rounded-sm hover:bg-black transition shadow-sm">
                     <i class="fas fa-plus mr-2"></i>Nuevo Proveedor
                 </button>
             </div>
         </div>
 
         <?php if ($message): ?>
-            <div class="mb-4 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+            <div
+                class="mb-4 p-4 rounded-sm border-l-4 <?php echo $messageType === 'success' ? 'bg-gray-100 border-gray-800 text-gray-800' : 'bg-red-50 border-red-800 text-red-900'; ?>">
                 <?php echo $message; ?>
             </div>
         <?php endif; ?>
 
         <!-- FORM ALTA -->
-        <div id="addForm" class="hidden bg-white rounded-lg shadow-lg mb-6 p-6">
+        <div id="addForm" class="hidden bg-white border border-gray-200 rounded-sm shadow-sm mb-6 p-6">
             <h3 class="text-xl font-bold mb-4">Nuevo Proveedor</h3>
             <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
@@ -185,8 +186,10 @@ $proveedores = $pdo->query($sql)->fetchAll();
                     <textarea name="direccion" rows="2" class="w-full border rounded-lg px-3 py-2"></textarea>
                 </div>
                 <div class="md:col-span-2 flex gap-2">
-                    <button type="button" onclick="toggleAddForm()" class="bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
-                    <button name="add_supplier" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Guardar</button>
+                    <button type="button" onclick="toggleAddForm()"
+                        class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-sm hover:bg-gray-50">Cancelar</button>
+                    <button name="add_supplier"
+                        class="bg-gray-900 text-white px-4 py-2 rounded-sm hover:bg-black">Guardar</button>
                 </div>
             </form>
         </div>
@@ -196,9 +199,9 @@ $proveedores = $pdo->query($sql)->fetchAll();
             class="w-full mb-4 px-4 py-3 border rounded-lg">
 
         <!-- TABLA -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
             <table class="min-w-full">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-100 border-b-2 border-gray-800">
                     <tr>
                         <th class="px-6 py-3">ID</th>
                         <th class="px-6 py-3">Razón Social</th>
@@ -209,7 +212,7 @@ $proveedores = $pdo->query($sql)->fetchAll();
                 </thead>
                 <tbody>
                     <?php foreach ($proveedores as $p): ?>
-                        <tr class="<?php echo $p['estado'] === 'Inactivo' ? 'bg-red-50' : ''; ?>"
+                        <tr class="border-b border-gray-200 <?php echo $p['estado'] === 'Inactivo' ? 'bg-gray-100 text-gray-500' : 'hover:bg-gray-50'; ?>"
                             data-search="<?php echo strtolower($p['razon_social'] . ' ' . $p['cuit']); ?>">
                             <td class="px-6 py-4">#<?php echo $p['idProveedor']; ?></td>
                             <td class="px-6 py-4 font-semibold"><?php echo htmlspecialchars($p['razon_social']); ?></td>
@@ -217,14 +220,18 @@ $proveedores = $pdo->query($sql)->fetchAll();
                             <td class="px-6 py-4"><?php echo $p['condicion_iva']; ?></td>
                             <td class="px-6 py-4 text-right">
                                 <button onclick="editSupplier(<?php echo htmlspecialchars(json_encode($p)); ?>)"
-                                    class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+                                    class="text-gray-600 hover:text-black mr-2 transition"><i
+                                        class="fas fa-edit"></i></button>
 
                                 <?php if ($p['estado'] === 'Activo'): ?>
-                                    <button onclick="deleteSupplier(<?php echo $p['idProveedor']; ?>,'<?php echo addslashes($p['razon_social']); ?>')"
-                                        class="text-red-600"><i class="fas fa-ban"></i></button>
+                                    <button
+                                        onclick="deleteSupplier(<?php echo $p['idProveedor']; ?>,'<?php echo addslashes($p['razon_social']); ?>')"
+                                        class="text-gray-500 hover:text-red-700 transition"><i class="fas fa-ban"></i></button>
                                 <?php else: ?>
-                                    <button onclick="activateSupplier(<?php echo $p['idProveedor']; ?>,'<?php echo addslashes($p['razon_social']); ?>')"
-                                        class="text-green-600"><i class="fas fa-check"></i></button>
+                                    <button
+                                        onclick="activateSupplier(<?php echo $p['idProveedor']; ?>,'<?php echo addslashes($p['razon_social']); ?>')"
+                                        class="text-gray-500 hover:text-green-700 transition"><i
+                                            class="fas fa-check"></i></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -268,11 +275,14 @@ $proveedores = $pdo->query($sql)->fetchAll();
                 </div>
                 <div class="md:col-span-2">
                     <label>Dirección</label>
-                    <textarea name="direccion" id="edit_direccion" rows="2" class="w-full border rounded-lg px-3 py-2"></textarea>
+                    <textarea name="direccion" id="edit_direccion" rows="2"
+                        class="w-full border rounded-lg px-3 py-2"></textarea>
                 </div>
                 <div class="md:col-span-2 flex gap-2">
-                    <button type="button" onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
-                    <button name="update_supplier" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Actualizar</button>
+                    <button type="button" onclick="closeEditModal()"
+                        class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-sm hover:bg-gray-50">Cancelar</button>
+                    <button name="update_supplier"
+                        class="bg-gray-900 text-white px-4 py-2 rounded-sm hover:bg-black">Actualizar</button>
                 </div>
             </form>
         </div>
@@ -286,8 +296,10 @@ $proveedores = $pdo->query($sql)->fetchAll();
             <form method="POST" class="flex gap-2 mt-4">
                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <input type="hidden" name="id" id="delete_id">
-                <button type="button" onclick="closeDeleteModal()" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
-                <button name="delete_supplier" class="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg">Desactivar</button>
+                <button type="button" onclick="closeDeleteModal()"
+                    class="flex-1 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-sm">Cancelar</button>
+                <button name="delete_supplier"
+                    class="flex-1 bg-gray-900 text-white px-4 py-2 rounded-sm hover:bg-red-700 transition">Desactivar</button>
             </form>
         </div>
     </div>
@@ -300,8 +312,10 @@ $proveedores = $pdo->query($sql)->fetchAll();
             <form method="POST" class="flex gap-2 mt-4">
                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <input type="hidden" name="id" id="activate_id">
-                <button type="button" onclick="closeActivateModal()" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
-                <button name="activate_supplier" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg">Activar</button>
+                <button type="button" onclick="closeActivateModal()"
+                    class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                <button name="activate_supplier"
+                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg">Activar</button>
             </form>
         </div>
     </div>

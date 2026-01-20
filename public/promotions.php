@@ -90,24 +90,24 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
 
     <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">
-                <i class="fas fa-tags text-purple-600 mr-2"></i>Promociones
+            <h1 class="text-3xl font-bold text-gray-900">
+                <i class="fas fa-tags text-gray-700 mr-2"></i>Promociones
             </h1>
             <button onclick="toggleAddForm()"
-                class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+                class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-sm transition shadow-sm">
                 <i class="fas fa-plus mr-2"></i>Nueva Promoción
             </button>
         </div>
 
         <?php if ($message): ?>
             <div
-                class="mb-4 p-4 rounded-lg <?php echo $messageType == 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+                class="mb-4 p-4 rounded-sm border-l-4 <?php echo $messageType == 'success' ? 'bg-gray-100 border-gray-800 text-gray-800' : 'bg-red-50 border-red-800 text-red-900'; ?>">
                 <?php echo $message; ?>
             </div>
         <?php endif; ?>
 
         <!-- Formulario -->
-        <div id="addForm" class="hidden bg-white rounded-lg shadow-lg mb-6 p-6">
+        <div id="addForm" class="hidden bg-white border border-gray-200 rounded-sm shadow-sm mb-6 p-6">
             <h3 class="text-xl font-bold mb-4">Nueva Promoción</h3>
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
@@ -116,12 +116,12 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
                     <div>
                         <label class="block text-sm font-medium mb-1">Nombre *</label>
                         <input type="text" name="nombre" required
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                            class="w-full px-3 py-2 border rounded-sm focus:ring-1 focus:ring-gray-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Tipo *</label>
                         <select name="tipo" id="tipo" required onchange="updateFields()"
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                            class="w-full px-3 py-2 border rounded-sm focus:ring-1 focus:ring-gray-500">
                             <option value="descuento_porcentaje">Descuento % (ej: 10% off)</option>
                             <option value="descuento_fijo">Descuento Fijo (ej: $100 off)</option>
                             <option value="nxm">NxM (ej: 2x1, 3x2)</option>
@@ -161,7 +161,7 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
                 <div>
                     <label class="block text-sm font-medium mb-1">Aplicar a Categoría (opcional)</label>
                     <select name="categoria_id"
-                        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        class="w-full px-3 py-2 border rounded-sm focus:ring-1 focus:ring-gray-500">
                         <option value="">Todos los productos seleccionados</option>
                         <?php foreach ($categorias as $cat): ?>
                             <option value="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['nombre']); ?>
@@ -173,7 +173,7 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
                 <div>
                     <label class="block text-sm font-medium mb-2">Productos (opcional - si no seleccionas, aplica a
                         categoría)</label>
-                    <div class="border rounded-lg p-3 max-h-48 overflow-y-auto">
+                    <div class="border rounded-sm p-3 max-h-48 overflow-y-auto">
                         <?php foreach ($productos as $prod): ?>
                             <label class="flex items-center py-1 hover:bg-gray-50 px-2 rounded">
                                 <input type="checkbox" name="productos[]" value="<?php echo $prod['id']; ?>" class="mr-2">
@@ -186,9 +186,9 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
 
                 <div class="flex gap-2">
                     <button type="button" onclick="toggleAddForm()"
-                        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                        class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-sm transition">Cancelar</button>
                     <button type="submit" name="add_promo"
-                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Crear
+                        class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-sm transition">Crear
                         Promoción</button>
                 </div>
             </form>
@@ -198,11 +198,11 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <?php foreach ($promociones as $promo): ?>
                 <div
-                    class="bg-white rounded-lg shadow-lg p-5 <?php echo $promo['activo'] ? 'border-l-4 border-purple-500' : 'opacity-60'; ?>">
+                    class="bg-white border border-gray-200 rounded-sm shadow-sm p-5 <?php echo $promo['activo'] ? 'border-l-4 border-l-gray-800' : 'opacity-60 bg-gray-50'; ?>">
                     <div class="flex justify-between items-start mb-3">
-                        <h3 class="font-bold text-lg"><?php echo htmlspecialchars($promo['nombre']); ?></h3>
+                        <h3 class="font-bold text-lg text-gray-900"><?php echo htmlspecialchars($promo['nombre']); ?></h3>
                         <span
-                            class="px-2 py-1 rounded text-xs font-bold <?php echo $promo['activo'] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'; ?>">
+                            class="px-2 py-1 rounded-sm text-xs font-bold border <?php echo $promo['activo'] ? 'bg-gray-100 border-gray-300 text-gray-800' : 'bg-white border-gray-300 text-gray-500'; ?>">
                             <?php echo $promo['activo'] ? 'ACTIVA' : 'INACTIVA'; ?>
                         </span>
                     </div>
@@ -247,7 +247,7 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
                             <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                             <input type="hidden" name="id" value="<?php echo $promo['id']; ?>">
                             <button type="submit" name="toggle_promo"
-                                class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1 rounded-sm text-sm transition">
                                 <?php echo $promo['activo'] ? 'Desactivar' : 'Activar'; ?>
                             </button>
                         </form>
@@ -255,7 +255,7 @@ $productos = $pdo->query("SELECT * FROM productos WHERE deleted_at IS NULL ORDER
                             <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                             <input type="hidden" name="id" value="<?php echo $promo['id']; ?>">
                             <button type="submit" name="delete_promo"
-                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                class="bg-white border border-gray-300 hover:bg-red-50 text-red-600 px-3 py-1 rounded-sm text-sm transition">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>

@@ -184,8 +184,8 @@ $usuarios = $pdo->query("
     <div class="max-w-7xl mx-auto px-4 py-8">
         <!-- Título -->
         <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">
-                <i class="fas fa-users text-purple-600 mr-3"></i>Gestión de Usuarios
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-users text-gray-700 mr-3"></i>Gestión de Usuarios
             </h1>
             <p class="text-gray-600">Administra empleados y sus permisos</p>
         </div>
@@ -193,7 +193,7 @@ $usuarios = $pdo->query("
         <!-- Mensajes -->
         <?php if ($message): ?>
             <div
-                class="mb-6 p-4 rounded-lg <?php echo $messageType == 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'; ?> border-l-4">
+                class="mb-6 p-4 rounded-sm <?php echo $messageType == 'success' ? 'bg-gray-100 border-gray-800 text-gray-800' : 'bg-red-50 border-red-800 text-red-900'; ?> border-l-4">
                 <i class="fas <?php echo $messageType == 'success' ? 'fa-check-circle' : 'fa-times-circle'; ?> mr-2"></i>
                 <?php echo $message; ?>
             </div>
@@ -202,8 +202,8 @@ $usuarios = $pdo->query("
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Formulario Crear Usuario -->
             <div class="lg:col-span-1">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-700">
+                <div class="bg-white p-6 rounded-sm shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-900">
                         <i class="fas fa-user-plus mr-2"></i>Nuevo Usuario
                     </h3>
                     <form method="POST" class="space-y-4">
@@ -212,14 +212,14 @@ $usuarios = $pdo->query("
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
                             <input type="text" name="username" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-500 focus:border-transparent"
                                 placeholder="usuario123">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
                             <input type="text" name="nombre" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-500 focus:border-transparent"
                                 placeholder="Juan Pérez">
                         </div>
 
@@ -240,7 +240,7 @@ $usuarios = $pdo->query("
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
                             <select name="role_id" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-500 focus:border-transparent">
                                 <?php foreach ($roles as $role): ?>
                                     <?php if ($role['id'] == 3)
                                         continue; ?>
@@ -261,7 +261,7 @@ $usuarios = $pdo->query("
                         </div>
 
                         <button type="submit" name="create_user"
-                            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                            class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-4 rounded-sm transition shadow-sm">
                             <i class="fas fa-user-plus mr-2"></i>Crear Usuario
                         </button>
                     </form>
@@ -270,9 +270,9 @@ $usuarios = $pdo->query("
 
             <!-- Lista de Usuarios -->
             <div class="lg:col-span-2">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-semibold mb-4">
-                        <i class="fas fa-list mr-2 text-purple-600"></i>Usuarios Registrados
+                <div class="bg-white p-6 rounded-sm shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-900">
+                        <i class="fas fa-list mr-2 text-gray-700"></i>Usuarios Registrados
                     </h3>
 
                     <div class="space-y-3">
@@ -294,15 +294,13 @@ $usuarios = $pdo->query("
                                             <p class="text-sm text-gray-600">
                                                 @<?php echo htmlspecialchars($user['username']); ?></p>
                                             <div class="flex items-center gap-2 mt-2">
-                                                <span class="text-xs px-2 py-1 rounded <?php
-                                                echo $user['role_id'] == 1 ? 'bg-purple-100 text-purple-700' :
-                                                    ($user['role_id'] == 2 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700');
-                                                ?>">
+                                                <span
+                                                    class="text-xs px-2 py-1 rounded-sm border border-gray-300 bg-gray-50 text-gray-700">
                                                     <i
                                                         class="fas fa-shield-alt mr-1"></i><?php echo htmlspecialchars($user['rol_nombre'] ?? 'Sin rol'); ?>
                                                 </span>
                                                 <span
-                                                    class="text-xs px-2 py-1 rounded <?php echo $user['is_active'] ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
+                                                    class="text-xs px-2 py-1 rounded-sm border <?php echo $user['is_active'] ? 'bg-gray-100 border-gray-400 text-gray-800' : 'bg-white border-gray-300 text-gray-500'; ?>">
                                                     <?php echo $user['is_active'] ? 'Activo' : 'Inactivo'; ?>
                                                 </span>
                                             </div>
@@ -312,7 +310,7 @@ $usuarios = $pdo->query("
                                     <div class="flex gap-2">
                                         <!-- Edit User (Available for all) -->
                                         <button onclick="openEditModal(<?php echo htmlspecialchars(json_encode($user)); ?>)"
-                                            class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition"
+                                            class="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-sm text-sm transition"
                                             title="Editar Datos">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -325,7 +323,7 @@ $usuarios = $pdo->query("
                                                     value="<?php echo $_SESSION['csrf_token']; ?>">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                                                 <button type="submit" name="toggle_status"
-                                                    class="px-3 py-2 rounded text-sm <?php echo $user['is_active'] ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'; ?> text-white transition"
+                                                    class="px-3 py-2 rounded-sm border border-gray-300 text-sm <?php echo $user['is_active'] ? 'bg-white text-gray-700 hover:bg-gray-50' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?> transition"
                                                     onclick="return confirm('¿Cambiar estado del usuario?');"
                                                     title="<?php echo $user['is_active'] ? 'Desactivar' : 'Activar'; ?>">
                                                     <i
@@ -336,7 +334,7 @@ $usuarios = $pdo->query("
                                             <!-- Reset Password -->
                                             <button
                                                 onclick="showResetPassword(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['nombre'] ?: $user['username']); ?>')"
-                                                class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm transition"
+                                                class="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-sm text-sm transition"
                                                 title="Cambiar contraseña">
                                                 <i class="fas fa-key"></i>
                                             </button>
@@ -347,7 +345,7 @@ $usuarios = $pdo->query("
                                                     value="<?php echo $_SESSION['csrf_token']; ?>">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                                                 <button type="submit" name="delete_user"
-                                                    class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded text-sm transition"
+                                                    class="px-3 py-2 bg-white border border-gray-300 hover:bg-red-50 text-red-600 rounded-sm text-sm transition"
                                                     onclick="return confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.');"
                                                     title="Eliminar usuario">
                                                     <i class="fas fa-trash"></i>
