@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 05-01-2026 a las 19:32:43
+-- Tiempo de generación: 25-01-2026 a las 23:34:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -72,7 +72,7 @@ CREATE TABLE `clientes` (
 
 INSERT INTO `clientes` (`id`, `nombre`, `email`, `telefono`, `saldo_cuenta`, `limite_credito`, `notas`, `activo`, `created_at`, `updated_at`, `direccion`) VALUES
 (1, 'pepe toño', 'asddd@gmail.com', '12312321', 0.00, 0.00, NULL, 1, '2025-12-15 21:57:05', '2025-12-17 00:16:29', 'calle falsa 123'),
-(2, 'jorge', 'jorge@gmailc.om', '1111', 50.00, 0.00, NULL, 1, '2025-12-16 00:38:47', '2025-12-16 02:25:32', '');
+(2, 'jorge', 'jorge@gmailc.om', '1111', -4950.00, 0.00, NULL, 1, '2025-12-16 00:38:47', '2026-01-05 18:49:42', '');
 
 -- --------------------------------------------------------
 
@@ -281,7 +281,14 @@ INSERT INTO `login_attempts` (`id`, `username`, `ip_address`, `user_agent`, `suc
 (128, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2025-12-17 02:31:06'),
 (129, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2025-12-17 18:34:52'),
 (130, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-04 20:37:19'),
-(131, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-05 17:30:14');
+(131, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-05 17:30:14'),
+(132, 'nuevouser', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-05 18:35:11'),
+(133, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-05 18:36:00'),
+(134, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-05 18:50:23'),
+(135, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-06 21:41:33'),
+(136, 'nuevouser', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-06 22:27:38'),
+(137, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-20 19:41:16'),
+(138, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-20 20:54:10');
 
 -- --------------------------------------------------------
 
@@ -411,7 +418,14 @@ INSERT INTO `movimientos_caja` (`id`, `turno_id`, `tipo`, `monto`, `descripcion`
 (77, 35, 'venta', 10000.00, 'Venta #56', 56, '2025-12-17 15:44:54', 6, '2025-12-17 18:44:54'),
 (78, 35, 'venta', 150.00, 'Venta #57', 57, '2025-12-17 15:51:12', 6, '2025-12-17 18:51:12'),
 (79, 35, 'venta', 0.00, 'Transferencia ($300.00) - Ref: juan perez', 58, '2026-01-04 18:09:26', 6, '2026-01-04 21:09:26'),
-(80, 35, 'venta', 0.00, 'Transferencia ($300.00) - Ref: ppepe (Tel: 394729842)', 59, '2026-01-05 14:33:51', 6, '2026-01-05 17:33:51');
+(80, 35, 'venta', 0.00, 'Transferencia ($300.00) - Ref: ppepe (Tel: 394729842)', 59, '2026-01-05 14:33:51', 6, '2026-01-05 17:33:51'),
+(81, 35, 'venta', 300.00, 'Venta #60', 60, '2026-01-05 15:38:57', 6, '2026-01-05 18:38:57'),
+(82, 35, 'venta', 0.00, 'Transferencia ($5,000.00) - Ref: pepe (Tel: 348344)', 61, '2026-01-05 15:49:17', 6, '2026-01-05 18:49:17'),
+(83, 35, 'venta', 0.00, 'Venta Cta. Cte. #62 (Total: $5,000.00)', 62, '2026-01-05 15:49:42', 6, '2026-01-05 18:49:42'),
+(84, 35, 'venta', 2000.00, 'Venta #63', 63, '2026-01-20 17:06:44', 6, '2026-01-20 20:06:44'),
+(85, 35, 'venta', 2000.00, 'Venta #64', 64, '2026-01-20 17:08:57', 6, '2026-01-20 20:08:57'),
+(86, 35, 'venta', 2000.00, 'Venta #65', 65, '2026-01-20 17:18:52', 6, '2026-01-20 20:18:52'),
+(87, 35, 'venta', 10.00, 'Venta #66', 66, '2026-01-20 17:24:38', 6, '2026-01-20 20:24:38');
 
 -- --------------------------------------------------------
 
@@ -441,12 +455,12 @@ INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `codi
 (2, 'Papas Lays', 'Chips de papa', 100.00, 13, '111111', 2, NULL, '2025-09-25 18:19:08', NULL),
 (3, 'Leche La Serenísima', 'Leche entera 1L', 120.00, 19, '123123', 3, NULL, '2025-09-25 18:19:08', NULL),
 (4, 'Pan Lactal', 'Pan blanco 500g', 80.00, 10, '7613035068391', 4, NULL, '2025-09-25 18:19:08', NULL),
-(5, 'Coca Cola Ligth 500ml', 'Refresco de cola ligth :D', 300.00, 3, NULL, 1, NULL, '2025-09-26 19:10:51', '2025-12-14 04:10:48'),
+(5, 'Coca Cola Ligth 500ml', 'Refresco de cola ligth :D', 300.00, 2, NULL, 1, NULL, '2025-09-26 19:10:51', '2025-12-14 04:10:48'),
 (6, 'PRODUCTO', 'UN PRODUCTO', 2000.00, 11, '321321', 5, NULL, '2025-09-27 00:40:23', NULL),
 (7, 'vaso de agua', 'un vaso de agua', 1205.00, 14, NULL, 1, NULL, '2025-12-12 01:48:27', NULL),
 (8, 'nuevo productoes', 'una cosa raradsd', 10001.00, 296, '123123123', 5, NULL, '2025-12-14 23:30:37', '2025-12-14 23:31:26'),
 (9, 'velas', 'son velas man', 10000.00, 30, '4732649832', 8, NULL, '2025-12-15 19:49:33', NULL),
-(10, 'coca cola nueva', '', 5000.00, 46, '5449000000996', 1, NULL, '2025-12-17 18:42:36', NULL),
+(10, 'coca cola nueva', '', 5000.00, 44, '5449000000996', 1, NULL, '2025-12-17 18:42:36', NULL),
 (11, 'off', '', 4000.00, 123, '7798047032537', 5, NULL, '2025-12-17 18:58:08', NULL);
 
 -- --------------------------------------------------------
@@ -642,8 +656,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `username`, `password`, `role`, `role_id`, `nombre`, `email`, `telefono`, `is_active`, `last_login`, `failed_attempts`, `locked_until`, `created_at`, `updated_at`) VALUES
-(6, 'admin', '$argon2id$v=19$m=65536,t=4,p=3$UlZnSS9hY3VHY0xyUVpwdA$HE1zA4aUtavbmD9DiDFhanyRB4wRrIP5euwwNDCxjv8', 'admin', 1, NULL, NULL, NULL, 1, '2026-01-05 17:30:14', 0, NULL, '2025-09-26 19:38:53', '2026-01-05 17:30:14'),
-(9, 'nuevouser', '$argon2id$v=19$m=65536,t=4,p=3$dlNvNzVPNFo0QmU0Zjh6Zg$3SzVcKZ6rh4dG1632Ib6bQX8pcfya/cws6cRr8zweac', 'empleado', 2, 'juanjo villafañe', 'jjj@gmail.com', NULL, 1, '2025-12-15 22:48:00', 0, NULL, '2025-12-12 01:23:31', '2025-12-15 22:48:00'),
+(6, 'admin', '$argon2id$v=19$m=65536,t=4,p=3$T2lQYlouZjRYLmU4RkNodg$JyMTr9UagcvBH7sZ1P/erQMWMuvkSzllEMXEWzFd96E', 'admin', 1, NULL, NULL, NULL, 1, '2026-01-20 20:54:10', 0, NULL, '2025-09-26 19:38:53', '2026-01-20 20:54:10'),
+(9, 'nuevouser', '$argon2id$v=19$m=65536,t=4,p=3$T25rWDdQWC5tajQ3WGNoNg$5zUnCJ/Tl5ujejT/tgTZ3DmJf6Eqvn8hStQ8NNb0rJ8', 'empleado', 2, 'juanjo villafañe', 'jjj@gmail.com', NULL, 1, '2026-01-06 22:27:38', 0, NULL, '2025-12-12 01:23:31', '2026-01-06 22:27:38'),
 (12, 'naza', '$argon2id$v=19$m=65536,t=4,p=3$bWVlMjdrbG9ZcDJwR1IxWQ$fSgCyWeftsp2jCwDhSdyjxOjGOnVVUy/BUBvZUxfOTA', 'empleado', 2, 'nazareno fabian madero', 'ebarile129@gmail.com', NULL, 1, '2025-12-13 22:57:26', 0, NULL, '2025-12-13 22:27:29', '2025-12-13 22:57:26'),
 (13, 'juanjo', '$argon2id$v=19$m=65536,t=4,p=3$bExsWi9LNktqa2tEM01QZQ$UcCbVbaDgr3decyft06Ma73W4zykdGRo2NKcZgI4/eI', 'empleado', 3, 'juanjo', 'juanjo@gmail.com', NULL, 1, '2025-12-15 19:44:51', 0, NULL, '2025-12-14 03:11:57', '2025-12-15 19:44:51');
 
@@ -720,7 +734,14 @@ INSERT INTO `ventas` (`id`, `usuario_id`, `cliente_id`, `total`, `descuento_tota
 (56, 6, NULL, 10000.00, 0.00, 10000.00, 20000.00, 10000.00, '2025-12-17 18:44:54'),
 (57, 6, NULL, 150.00, 0.00, 150.00, 2000.00, 1850.00, '2025-12-17 18:51:12'),
 (58, 6, NULL, 300.00, 0.00, 300.00, 300.00, 0.00, '2026-01-04 21:09:25'),
-(59, 6, NULL, 300.00, 0.00, 300.00, 300.00, 0.00, '2026-01-05 17:33:51');
+(59, 6, NULL, 300.00, 0.00, 300.00, 300.00, 0.00, '2026-01-05 17:33:51'),
+(60, 6, NULL, 300.00, 0.00, 300.00, 2000.00, 1700.00, '2026-01-05 18:38:57'),
+(61, 6, NULL, 5000.00, 0.00, 5000.00, 5000.00, 0.00, '2026-01-05 18:49:17'),
+(62, 6, 2, 5000.00, 0.00, 5000.00, 0.00, 0.00, '2026-01-05 18:49:42'),
+(63, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:06:44'),
+(64, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:08:57'),
+(65, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:18:52'),
+(66, 6, NULL, 10.00, 0.00, 10.00, 10.00, 0.00, '2026-01-20 20:24:37');
 
 -- --------------------------------------------------------
 
@@ -765,6 +786,7 @@ CREATE TABLE `venta_detalles` (
   `id` int(11) NOT NULL,
   `venta_id` int(11) DEFAULT NULL,
   `producto_id` int(11) DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
   `cantidad` int(11) NOT NULL,
   `precio` decimal(10,2) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL
@@ -774,77 +796,84 @@ CREATE TABLE `venta_detalles` (
 -- Volcado de datos para la tabla `venta_detalles`
 --
 
-INSERT INTO `venta_detalles` (`id`, `venta_id`, `producto_id`, `cantidad`, `precio`, `subtotal`) VALUES
-(1, 1, 1, 10, 150.00, 1500.00),
-(2, 2, 1, 10, 150.00, 1500.00),
-(3, 3, 5, 10, 300.00, 3000.00),
-(4, 4, 5, 10, 300.00, 3000.00),
-(5, 5, 5, 8, 300.00, 2400.00),
-(6, 6, 5, 3, 300.00, 900.00),
-(7, 7, 4, 10, 80.00, 800.00),
-(8, 8, 4, 5, 80.00, 400.00),
-(9, 9, 1, 22, 150.00, 3300.00),
-(10, 10, 1, 4, 150.00, 600.00),
-(11, 11, 3, 8, 120.00, 960.00),
-(12, 11, 1, 1, 150.00, 150.00),
-(13, 12, 1, 1, 150.00, 150.00),
-(14, 12, 2, 1, 100.00, 100.00),
-(15, 13, 1, 1, 150.00, 150.00),
-(16, 13, 2, 9, 100.00, 900.00),
-(17, 14, 1, 1, 150.00, 150.00),
-(18, 14, 2, 9, 100.00, 900.00),
-(19, 15, 6, 1, 2000.00, 2000.00),
-(20, 16, 3, 1, 120.00, 120.00),
-(21, 17, 3, 1, 120.00, 120.00),
-(22, 18, 2, 1, 100.00, 100.00),
-(23, 19, 2, 1, 100.00, 100.00),
-(24, 20, 2, 1, 100.00, 100.00),
-(25, 20, 3, 1, 120.00, 120.00),
-(26, 21, 6, 1, 2000.00, 2000.00),
-(27, 22, 3, 1, 120.00, 120.00),
-(28, 23, 3, 1, 120.00, 120.00),
-(29, 24, 3, 1, 120.00, 120.00),
-(30, 25, 3, 1, 120.00, 120.00),
-(31, 26, 2, 1, 100.00, 100.00),
-(32, 27, 8, 1, 10001.00, 10001.00),
-(33, 28, 3, 1, 120.00, 120.00),
-(34, 29, 3, 1, 120.00, 120.00),
-(35, 30, 6, 1, 2000.00, 2000.00),
-(36, 31, 6, 1, 2000.00, 2000.00),
-(37, 32, 6, 1, 2000.00, 2000.00),
-(38, 33, 6, 1, 2000.00, 2000.00),
-(39, 33, 3, 1, 120.00, 120.00),
-(40, 33, 7, 1, 1205.00, 1205.00),
-(41, 34, 3, 2, 120.00, 240.00),
-(42, 34, 2, 2, 100.00, 200.00),
-(43, 35, 2, 1, 100.00, 100.00),
-(44, 36, 6, 1, 2000.00, 2000.00),
-(45, 36, 8, 1, 10001.00, 10001.00),
-(46, 37, 6, 1, 2000.00, 2000.00),
-(47, 38, 6, 1, 2000.00, 2000.00),
-(48, 39, 6, 1, 2000.00, 2000.00),
-(49, 40, 6, 2, 2000.00, 4000.00),
-(50, 41, 6, 1, 2000.00, 2000.00),
-(51, 42, 6, 1, 2000.00, 2000.00),
-(52, 42, 2, 1, 100.00, 100.00),
-(53, 43, 8, 1, 10001.00, 10001.00),
-(54, 44, 8, 1, 10001.00, 10001.00),
-(55, 45, 8, 1, 10001.00, 10001.00),
-(56, 46, 1, 2, 150.00, 300.00),
-(57, 47, 1, 5, 150.00, 750.00),
-(58, 48, 1, 1, 150.00, 150.00),
-(59, 49, 1, 1, 150.00, 150.00),
-(60, 49, 5, 1, 300.00, 300.00),
-(61, 50, 5, 2, 300.00, 600.00),
-(62, 51, 5, 2, 300.00, 600.00),
-(63, 52, 1, 2, 150.00, 300.00),
-(64, 53, 3, 1, 120.00, 120.00),
-(65, 54, 1, 1, 150.00, 150.00),
-(66, 55, 10, 2, 5000.00, 10000.00),
-(67, 56, 10, 2, 5000.00, 10000.00),
-(68, 57, 1, 1, 150.00, 150.00),
-(69, 58, 5, 1, 300.00, 300.00),
-(70, 59, 1, 2, 150.00, 300.00);
+INSERT INTO `venta_detalles` (`id`, `venta_id`, `producto_id`, `descripcion`, `cantidad`, `precio`, `subtotal`) VALUES
+(1, 1, 1, NULL, 10, 150.00, 1500.00),
+(2, 2, 1, NULL, 10, 150.00, 1500.00),
+(3, 3, 5, NULL, 10, 300.00, 3000.00),
+(4, 4, 5, NULL, 10, 300.00, 3000.00),
+(5, 5, 5, NULL, 8, 300.00, 2400.00),
+(6, 6, 5, NULL, 3, 300.00, 900.00),
+(7, 7, 4, NULL, 10, 80.00, 800.00),
+(8, 8, 4, NULL, 5, 80.00, 400.00),
+(9, 9, 1, NULL, 22, 150.00, 3300.00),
+(10, 10, 1, NULL, 4, 150.00, 600.00),
+(11, 11, 3, NULL, 8, 120.00, 960.00),
+(12, 11, 1, NULL, 1, 150.00, 150.00),
+(13, 12, 1, NULL, 1, 150.00, 150.00),
+(14, 12, 2, NULL, 1, 100.00, 100.00),
+(15, 13, 1, NULL, 1, 150.00, 150.00),
+(16, 13, 2, NULL, 9, 100.00, 900.00),
+(17, 14, 1, NULL, 1, 150.00, 150.00),
+(18, 14, 2, NULL, 9, 100.00, 900.00),
+(19, 15, 6, NULL, 1, 2000.00, 2000.00),
+(20, 16, 3, NULL, 1, 120.00, 120.00),
+(21, 17, 3, NULL, 1, 120.00, 120.00),
+(22, 18, 2, NULL, 1, 100.00, 100.00),
+(23, 19, 2, NULL, 1, 100.00, 100.00),
+(24, 20, 2, NULL, 1, 100.00, 100.00),
+(25, 20, 3, NULL, 1, 120.00, 120.00),
+(26, 21, 6, NULL, 1, 2000.00, 2000.00),
+(27, 22, 3, NULL, 1, 120.00, 120.00),
+(28, 23, 3, NULL, 1, 120.00, 120.00),
+(29, 24, 3, NULL, 1, 120.00, 120.00),
+(30, 25, 3, NULL, 1, 120.00, 120.00),
+(31, 26, 2, NULL, 1, 100.00, 100.00),
+(32, 27, 8, NULL, 1, 10001.00, 10001.00),
+(33, 28, 3, NULL, 1, 120.00, 120.00),
+(34, 29, 3, NULL, 1, 120.00, 120.00),
+(35, 30, 6, NULL, 1, 2000.00, 2000.00),
+(36, 31, 6, NULL, 1, 2000.00, 2000.00),
+(37, 32, 6, NULL, 1, 2000.00, 2000.00),
+(38, 33, 6, NULL, 1, 2000.00, 2000.00),
+(39, 33, 3, NULL, 1, 120.00, 120.00),
+(40, 33, 7, NULL, 1, 1205.00, 1205.00),
+(41, 34, 3, NULL, 2, 120.00, 240.00),
+(42, 34, 2, NULL, 2, 100.00, 200.00),
+(43, 35, 2, NULL, 1, 100.00, 100.00),
+(44, 36, 6, NULL, 1, 2000.00, 2000.00),
+(45, 36, 8, NULL, 1, 10001.00, 10001.00),
+(46, 37, 6, NULL, 1, 2000.00, 2000.00),
+(47, 38, 6, NULL, 1, 2000.00, 2000.00),
+(48, 39, 6, NULL, 1, 2000.00, 2000.00),
+(49, 40, 6, NULL, 2, 2000.00, 4000.00),
+(50, 41, 6, NULL, 1, 2000.00, 2000.00),
+(51, 42, 6, NULL, 1, 2000.00, 2000.00),
+(52, 42, 2, NULL, 1, 100.00, 100.00),
+(53, 43, 8, NULL, 1, 10001.00, 10001.00),
+(54, 44, 8, NULL, 1, 10001.00, 10001.00),
+(55, 45, 8, NULL, 1, 10001.00, 10001.00),
+(56, 46, 1, NULL, 2, 150.00, 300.00),
+(57, 47, 1, NULL, 5, 150.00, 750.00),
+(58, 48, 1, NULL, 1, 150.00, 150.00),
+(59, 49, 1, NULL, 1, 150.00, 150.00),
+(60, 49, 5, NULL, 1, 300.00, 300.00),
+(61, 50, 5, NULL, 2, 300.00, 600.00),
+(62, 51, 5, NULL, 2, 300.00, 600.00),
+(63, 52, 1, NULL, 2, 150.00, 300.00),
+(64, 53, 3, NULL, 1, 120.00, 120.00),
+(65, 54, 1, NULL, 1, 150.00, 150.00),
+(66, 55, 10, NULL, 2, 5000.00, 10000.00),
+(67, 56, 10, NULL, 2, 5000.00, 10000.00),
+(68, 57, 1, NULL, 1, 150.00, 150.00),
+(69, 58, 5, NULL, 1, 300.00, 300.00),
+(70, 59, 1, NULL, 2, 150.00, 300.00),
+(71, 60, 5, NULL, 1, 300.00, 300.00),
+(72, 61, 10, NULL, 1, 5000.00, 5000.00),
+(73, 62, 10, NULL, 1, 5000.00, 5000.00),
+(74, 63, NULL, 'Item Manual', 1, 2000.00, 2000.00),
+(75, 64, NULL, 'vario', 1, 2000.00, 2000.00),
+(76, 65, NULL, 'Item Manual', 1, 2000.00, 2000.00),
+(77, 66, NULL, 'Varios', 1, 10.00, 10.00);
 
 -- --------------------------------------------------------
 
@@ -905,7 +934,14 @@ INSERT INTO `venta_pagos` (`id`, `venta_id`, `metodo_pago_id`, `monto`, `referen
 (36, 56, 1, 20000.00, NULL, NULL, '2025-12-17 18:44:54'),
 (37, 57, 1, 2000.00, NULL, NULL, '2025-12-17 18:51:12'),
 (38, 58, 4, 300.00, 'juan perez', NULL, '2026-01-04 21:09:26'),
-(39, 59, 4, 300.00, 'ppepe', '394729842', '2026-01-05 17:33:51');
+(39, 59, 4, 300.00, 'ppepe', '394729842', '2026-01-05 17:33:51'),
+(40, 60, 1, 2000.00, NULL, NULL, '2026-01-05 18:38:57'),
+(41, 61, 4, 5000.00, 'pepe', '348344', '2026-01-05 18:49:17'),
+(42, 62, 5, 5000.00, NULL, NULL, '2026-01-05 18:49:42'),
+(43, 63, 1, 2000.00, NULL, NULL, '2026-01-20 20:06:44'),
+(44, 64, 1, 2000.00, NULL, NULL, '2026-01-20 20:08:57'),
+(45, 65, 1, 2000.00, NULL, NULL, '2026-01-20 20:18:52'),
+(46, 66, 1, 10.00, NULL, NULL, '2026-01-20 20:24:38');
 
 --
 -- Índices para tablas volcadas
@@ -1085,7 +1121,7 @@ ALTER TABLE `configuracion`
 -- AUTO_INCREMENT de la tabla `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=132;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=139;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -1097,7 +1133,7 @@ ALTER TABLE `metodos_pago`
 -- AUTO_INCREMENT de la tabla `movimientos_caja`
 --
 ALTER TABLE `movimientos_caja`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
@@ -1145,7 +1181,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT de la tabla `venta_descuentos`
@@ -1157,13 +1193,13 @@ ALTER TABLE `venta_descuentos`
 -- AUTO_INCREMENT de la tabla `venta_detalles`
 --
 ALTER TABLE `venta_detalles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT de la tabla `venta_pagos`
 --
 ALTER TABLE `venta_pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- Restricciones para tablas volcadas
