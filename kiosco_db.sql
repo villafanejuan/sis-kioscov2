@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-01-2026 a las 23:34:52
+-- Tiempo de generación: 01-02-2026 a las 04:12:15
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -44,7 +44,8 @@ INSERT INTO `categorias` (`id`, `nombre`, `descripcion`) VALUES
 (4, 'Panadería', 'Pan, facturas, medialunas'),
 (5, 'nueva CAT', 'categoria de PRUEBA'),
 (7, 'salchipapa', 'xD'),
-(8, 'Corazon chico', 'asdjsajd');
+(8, 'Corazon chico', 'asdjsajd'),
+(9, 'Corazon chico', '');
 
 -- --------------------------------------------------------
 
@@ -72,7 +73,7 @@ CREATE TABLE `clientes` (
 
 INSERT INTO `clientes` (`id`, `nombre`, `email`, `telefono`, `saldo_cuenta`, `limite_credito`, `notas`, `activo`, `created_at`, `updated_at`, `direccion`) VALUES
 (1, 'pepe toño', 'asddd@gmail.com', '12312321', 0.00, 0.00, NULL, 1, '2025-12-15 21:57:05', '2025-12-17 00:16:29', 'calle falsa 123'),
-(2, 'jorge', 'jorge@gmailc.om', '1111', -4950.00, 0.00, NULL, 1, '2025-12-16 00:38:47', '2026-01-05 18:49:42', '');
+(2, 'jorge', 'jorge@gmailc.om', '1111', -4950.00, 0.00, NULL, 0, '2025-12-16 00:38:47', '2026-02-01 02:39:51', '');
 
 -- --------------------------------------------------------
 
@@ -288,7 +289,9 @@ INSERT INTO `login_attempts` (`id`, `username`, `ip_address`, `user_agent`, `suc
 (135, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-06 21:41:33'),
 (136, 'nuevouser', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-06 22:27:38'),
 (137, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-20 19:41:16'),
-(138, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-20 20:54:10');
+(138, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 1, '2026-01-20 20:54:10'),
+(139, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-01 02:38:27'),
+(140, 'admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 1, '2026-02-01 03:07:20');
 
 -- --------------------------------------------------------
 
@@ -425,7 +428,8 @@ INSERT INTO `movimientos_caja` (`id`, `turno_id`, `tipo`, `monto`, `descripcion`
 (84, 35, 'venta', 2000.00, 'Venta #63', 63, '2026-01-20 17:06:44', 6, '2026-01-20 20:06:44'),
 (85, 35, 'venta', 2000.00, 'Venta #64', 64, '2026-01-20 17:08:57', 6, '2026-01-20 20:08:57'),
 (86, 35, 'venta', 2000.00, 'Venta #65', 65, '2026-01-20 17:18:52', 6, '2026-01-20 20:18:52'),
-(87, 35, 'venta', 10.00, 'Venta #66', 66, '2026-01-20 17:24:38', 6, '2026-01-20 20:24:38');
+(87, 35, 'venta', 10.00, 'Venta #66', 66, '2026-01-20 17:24:38', 6, '2026-01-20 20:24:38'),
+(88, 35, 'venta', 5000.00, 'Venta #67', 67, '2026-02-01 00:03:46', 6, '2026-02-01 03:03:46');
 
 -- --------------------------------------------------------
 
@@ -451,7 +455,7 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `codigo_barra`, `categoria_id`, `imagen`, `created_at`, `deleted_at`) VALUES
-(1, 'Coca Cola 500ml', 'Refresco de cola', 150.00, 2, '123456789012', 1, NULL, '2025-09-25 18:19:08', NULL),
+(1, 'Coca Cola 500ml', 'Refresco de cola', 150.00, 12, '123456789012', 1, NULL, '2025-09-25 18:19:08', NULL),
 (2, 'Papas Lays', 'Chips de papa', 100.00, 13, '111111', 2, NULL, '2025-09-25 18:19:08', NULL),
 (3, 'Leche La Serenísima', 'Leche entera 1L', 120.00, 19, '123123', 3, NULL, '2025-09-25 18:19:08', NULL),
 (4, 'Pan Lactal', 'Pan blanco 500g', 80.00, 10, '7613035068391', 4, NULL, '2025-09-25 18:19:08', NULL),
@@ -460,7 +464,7 @@ INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `codi
 (7, 'vaso de agua', 'un vaso de agua', 1205.00, 14, NULL, 1, NULL, '2025-12-12 01:48:27', NULL),
 (8, 'nuevo productoes', 'una cosa raradsd', 10001.00, 296, '123123123', 5, NULL, '2025-12-14 23:30:37', '2025-12-14 23:31:26'),
 (9, 'velas', 'son velas man', 10000.00, 30, '4732649832', 8, NULL, '2025-12-15 19:49:33', NULL),
-(10, 'coca cola nueva', '', 5000.00, 44, '5449000000996', 1, NULL, '2025-12-17 18:42:36', NULL),
+(10, 'coca cola nueva', '', 5000.00, 43, '5449000000996', 1, NULL, '2025-12-17 18:42:36', NULL),
 (11, 'off', '', 4000.00, 123, '7798047032537', 5, NULL, '2025-12-17 18:58:08', NULL);
 
 -- --------------------------------------------------------
@@ -656,7 +660,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `username`, `password`, `role`, `role_id`, `nombre`, `email`, `telefono`, `is_active`, `last_login`, `failed_attempts`, `locked_until`, `created_at`, `updated_at`) VALUES
-(6, 'admin', '$argon2id$v=19$m=65536,t=4,p=3$T2lQYlouZjRYLmU4RkNodg$JyMTr9UagcvBH7sZ1P/erQMWMuvkSzllEMXEWzFd96E', 'admin', 1, NULL, NULL, NULL, 1, '2026-01-20 20:54:10', 0, NULL, '2025-09-26 19:38:53', '2026-01-20 20:54:10'),
+(6, 'admin', '$argon2id$v=19$m=65536,t=4,p=3$cS56Y1M3MGVvUVE4YjNuQw$WfzwLHVAcMRnK3NBXXK4Fja9v4ZLJTUargmaZ6TKzgk', 'admin', 1, NULL, NULL, NULL, 1, '2026-02-01 03:07:20', 0, NULL, '2025-09-26 19:38:53', '2026-02-01 03:07:20'),
 (9, 'nuevouser', '$argon2id$v=19$m=65536,t=4,p=3$T25rWDdQWC5tajQ3WGNoNg$5zUnCJ/Tl5ujejT/tgTZ3DmJf6Eqvn8hStQ8NNb0rJ8', 'empleado', 2, 'juanjo villafañe', 'jjj@gmail.com', NULL, 1, '2026-01-06 22:27:38', 0, NULL, '2025-12-12 01:23:31', '2026-01-06 22:27:38'),
 (12, 'naza', '$argon2id$v=19$m=65536,t=4,p=3$bWVlMjdrbG9ZcDJwR1IxWQ$fSgCyWeftsp2jCwDhSdyjxOjGOnVVUy/BUBvZUxfOTA', 'empleado', 2, 'nazareno fabian madero', 'ebarile129@gmail.com', NULL, 1, '2025-12-13 22:57:26', 0, NULL, '2025-12-13 22:27:29', '2025-12-13 22:57:26'),
 (13, 'juanjo', '$argon2id$v=19$m=65536,t=4,p=3$bExsWi9LNktqa2tEM01QZQ$UcCbVbaDgr3decyft06Ma73W4zykdGRo2NKcZgI4/eI', 'empleado', 3, 'juanjo', 'juanjo@gmail.com', NULL, 1, '2025-12-15 19:44:51', 0, NULL, '2025-12-14 03:11:57', '2025-12-15 19:44:51');
@@ -741,7 +745,8 @@ INSERT INTO `ventas` (`id`, `usuario_id`, `cliente_id`, `total`, `descuento_tota
 (63, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:06:44'),
 (64, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:08:57'),
 (65, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:18:52'),
-(66, 6, NULL, 10.00, 0.00, 10.00, 10.00, 0.00, '2026-01-20 20:24:37');
+(66, 6, NULL, 10.00, 0.00, 10.00, 10.00, 0.00, '2026-01-20 20:24:37'),
+(67, 6, NULL, 5000.00, 0.00, 5000.00, 20000.00, 15000.00, '2026-02-01 03:03:46');
 
 -- --------------------------------------------------------
 
@@ -873,7 +878,8 @@ INSERT INTO `venta_detalles` (`id`, `venta_id`, `producto_id`, `descripcion`, `c
 (74, 63, NULL, 'Item Manual', 1, 2000.00, 2000.00),
 (75, 64, NULL, 'vario', 1, 2000.00, 2000.00),
 (76, 65, NULL, 'Item Manual', 1, 2000.00, 2000.00),
-(77, 66, NULL, 'Varios', 1, 10.00, 10.00);
+(77, 66, NULL, 'Varios', 1, 10.00, 10.00),
+(78, 67, 10, 'coca cola nueva', 1, 5000.00, 5000.00);
 
 -- --------------------------------------------------------
 
@@ -941,7 +947,8 @@ INSERT INTO `venta_pagos` (`id`, `venta_id`, `metodo_pago_id`, `monto`, `referen
 (43, 63, 1, 2000.00, NULL, NULL, '2026-01-20 20:06:44'),
 (44, 64, 1, 2000.00, NULL, NULL, '2026-01-20 20:08:57'),
 (45, 65, 1, 2000.00, NULL, NULL, '2026-01-20 20:18:52'),
-(46, 66, 1, 10.00, NULL, NULL, '2026-01-20 20:24:38');
+(46, 66, 1, 10.00, NULL, NULL, '2026-01-20 20:24:38'),
+(47, 67, 1, 20000.00, NULL, NULL, '2026-02-01 03:03:46');
 
 --
 -- Índices para tablas volcadas
@@ -1097,7 +1104,7 @@ ALTER TABLE `venta_pagos`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `clientes`
@@ -1121,7 +1128,7 @@ ALTER TABLE `configuracion`
 -- AUTO_INCREMENT de la tabla `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=139;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=141;
 
 --
 -- AUTO_INCREMENT de la tabla `metodos_pago`
@@ -1133,7 +1140,7 @@ ALTER TABLE `metodos_pago`
 -- AUTO_INCREMENT de la tabla `movimientos_caja`
 --
 ALTER TABLE `movimientos_caja`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
@@ -1181,7 +1188,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT de la tabla `venta_descuentos`
@@ -1193,13 +1200,13 @@ ALTER TABLE `venta_descuentos`
 -- AUTO_INCREMENT de la tabla `venta_detalles`
 --
 ALTER TABLE `venta_detalles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT de la tabla `venta_pagos`
 --
 ALTER TABLE `venta_pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- Restricciones para tablas volcadas
