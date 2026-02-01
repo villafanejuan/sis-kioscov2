@@ -219,6 +219,10 @@ $proveedores = $pdo->query($sql)->fetchAll();
                             <td class="px-6 py-4"><?php echo $p['cuit']; ?></td>
                             <td class="px-6 py-4"><?php echo $p['condicion_iva']; ?></td>
                             <td class="px-6 py-4 text-right">
+                                <button onclick="viewSupplier(<?php echo htmlspecialchars(json_encode($p)); ?>)"
+                                    class="text-blue-600 hover:text-blue-800 mr-2 transition"><i
+                                        class="fas fa-eye"></i></button>
+
                                 <button onclick="editSupplier(<?php echo htmlspecialchars(json_encode($p)); ?>)"
                                     class="text-gray-600 hover:text-black mr-2 transition"><i
                                         class="fas fa-edit"></i></button>
@@ -238,6 +242,54 @@ $proveedores = $pdo->query($sql)->fetchAll();
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- MODAL VER -->
+    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Detalles del Proveedor</h3>
+                <button onclick="closeViewModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Razón Social</label>
+                    <p id="view_razon" class="text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Nombre Fantasía</label>
+                    <p id="view_fantasia" class="text-base text-gray-800">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">CUIT</label>
+                    <p id="view_cuit" class="text-base text-gray-800">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Condición IVA</label>
+                    <p id="view_iva" class="text-base text-gray-800">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Teléfono</label>
+                    <p id="view_telefono" class="text-base text-gray-800">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Email</label>
+                    <p id="view_email" class="text-base text-gray-800">-</p>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-500">Dirección</label>
+                    <p id="view_direccion"
+                        class="text-base text-gray-800 bg-gray-50 p-3 rounded border border-gray-100">-
+                    </p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeViewModal()"
+                    class="bg-gray-800 text-white px-4 py-2 rounded-sm hover:bg-gray-900">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -330,6 +382,26 @@ $proveedores = $pdo->query($sql)->fetchAll();
             document.querySelectorAll('tbody tr').forEach(r => {
                 r.style.display = r.dataset.search.includes(f) ? '' : 'none';
             });
+        }
+
+        function viewSupplier(p) {
+            document.getElementById('view_razon').textContent = p.razon_social;
+            document.getElementById('view_fantasia').textContent = p.nombre_fantasia || '-';
+            document.getElementById('view_cuit').textContent = p.cuit;
+            document.getElementById('view_iva').textContent = p.condicion_iva;
+            document.getElementById('view_telefono').textContent = p.telefono || '-';
+            document.getElementById('view_email').textContent = p.email || '-';
+            document.getElementById('view_direccion').textContent = p.direccion || '-';
+
+            const modal = document.getElementById('viewModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeViewModal() {
+            const modal = document.getElementById('viewModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
         function editSupplier(p) {

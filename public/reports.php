@@ -32,30 +32,50 @@ if ($isAdmin || $userRole === 'cajero') {
     $users = [];
 }
 
-// 1. Estadísticas generales
-$statsParams = array_merge($params, $params);
+// ==========================================
+// FILTROS FECHA (MOVIDO AL INICIO)
+// ==========================================
+$period = $_GET['period'] ?? 'today'; // Default to today for speed
+$dateFrom = $_GET['date_from'] ?? '';
+$dateTo = $_GET['date_to'] ?? '';
 
-$sqlStatsVentas = "SELECT 
-                    COUNT(*) as cnt, 
-                    COALESCE(SUM(total), 0) as val, 
-                    COALESCE(SUM(LEAST(total, monto_pagado)), 0) as cash,
-                    COALESCE(SUM(CASE WHEN total > monto_pagado THEN total - monto_pagado ELSE 0 END), 0) as credit
-                   FROM ventas v $whereClauseVentas";
+$dateWhereV = "";
+$dateWhereP = "";
+$dateParams = [];
 
-$sqlStatsPagos = "SELECT 
-                    COALESCE(SUM(monto), 0) as cash_debt
-                  FROM cliente_pagos cp $whereClausePagos";
+if ($period === 'custom' && !empty($dateFrom) && !empty($dateTo)) {
+    // Custom date range - use BETWEEN
+    $dateWhereV = "AND DATE(v.fecha) BETWEEN ? AND ?";
+    $dateWhereP = "AND DATE(cp.fecha) BETWEEN ? AND ?";
+    $dateParams = [$dateFrom, $dateTo];
+} else {
+    // Predefined periods
+    $colV = "DATE(v.fecha)";
+    $colP = "DATE(cp.fecha)";
+    switch ($period) {
+        case 'today':
+            $dateWhereV = "AND $colV = CURDATE()";
+            $dateWhereP = "AND $colP = CURDATE()";
+            break;
+        case 'week':
+            $dateWhereV = "AND YEARWEEK(v.fecha, 1) = YEARWEEK(CURDATE(), 1)";
+            $dateWhereP = "AND YEARWEEK(cp.fecha, 1) = YEARWEEK(CURDATE(), 1)";
+            break;
+        case 'month':
+            $dateWhereV = "AND MONTH(v.fecha) = MONTH(CURDATE()) AND YEAR(v.fecha) = YEAR(CURDATE())";
+            $dateWhereP = "AND MONTH(cp.fecha) = MONTH(CURDATE()) AND YEAR(cp.fecha) = YEAR(CURDATE())";
+            break;
+        case 'year':
+            $dateWhereV = "AND YEAR(v.fecha) = YEAR(CURDATE())";
+            $dateWhereP = "AND YEAR(cp.fecha) = YEAR(CURDATE())";
+            break;
+        case 'all':
+        default:
+            // No date filter
+            break;
+    }
+}
 
-// Execute separately
-$stmtV = $pdo->prepare($sqlStatsVentas);
-$stmtV->execute($params);
-$resV = $stmtV->fetch();
-
-$stmtP = $pdo->prepare($sqlStatsPagos);
-$stmtP->execute($params);
-$resP = $stmtP->fetch();
-
-// Calculate Transfers Total (To subtract from Cash and show separately)
 // Helper to prepend where
 function prependWhere($clause, $extra)
 {
@@ -64,14 +84,63 @@ function prependWhere($clause, $extra)
     return $clause . " AND " . $extra;
 }
 
-$paramTransfer = $params;
+// Merge params for Stats Query
+$finalStatsParams = array_merge($params, $dateParams);
+
+// Build complete WHERE clauses for stats
+$statsWhereVentas = $whereClauseVentas;
+if (!empty($dateWhereV)) {
+    // Remove "AND " prefix from dateWhereV and add properly
+    $dateCondition = substr($dateWhereV, 4); // Remove "AND "
+    $statsWhereVentas = prependWhere($whereClauseVentas, $dateCondition);
+}
+
+$statsWherePagos = $whereClausePagos;
+if (!empty($dateWhereP)) {
+    $dateCondition = substr($dateWhereP, 4); // Remove "AND "
+    $statsWherePagos = prependWhere($whereClausePagos, $dateCondition);
+}
+
+// 1. Estadísticas generales
+$sqlStatsVentas = "SELECT 
+                    COUNT(*) as cnt, 
+                    COALESCE(SUM(total), 0) as val, 
+                    COALESCE(SUM(LEAST(total, monto_pagado)), 0) as cash,
+                    COALESCE(SUM(CASE WHEN total > monto_pagado THEN total - monto_pagado ELSE 0 END), 0) as credit
+                   FROM ventas v 
+                   $statsWhereVentas";
+
+$sqlStatsPagos = "SELECT 
+                    COALESCE(SUM(monto), 0) as cash_debt
+                  FROM cliente_pagos cp 
+                  $statsWherePagos";
+
+// Execute separately
+$stmtV = $pdo->prepare($sqlStatsVentas);
+$stmtV->execute($finalStatsParams);
+$resV = $stmtV->fetch();
+
+$stmtP = $pdo->prepare($sqlStatsPagos);
+$stmtP->execute($finalStatsParams);
+$resP = $stmtP->fetch();
+
+// Calculate Transfers Total (To subtract from Cash and show separately)
+$paramTransfer = $finalStatsParams;
+
+// Build transfer WHERE clause
+$statsWhereTransfer = $statsWhereVentas;
+if (!empty($statsWhereTransfer)) {
+    $statsWhereTransfer .= " AND mp.nombre = 'Transferencia'";
+} else {
+    $statsWhereTransfer = "WHERE mp.nombre = 'Transferencia'";
+}
+
 $sqlStatsTransfer = "SELECT 
                         COALESCE(SUM(vp.monto), 0) as total_trans
                      FROM venta_pagos vp
                      JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id
                      JOIN ventas v ON vp.venta_id = v.id 
-                     $whereClauseVentas 
-                     AND mp.nombre = 'Transferencia'";
+                     $statsWhereTransfer";
 
 $stmtT = $pdo->prepare($sqlStatsTransfer);
 $stmtT->execute($paramTransfer);
@@ -87,17 +156,15 @@ $stats = [
     'debt_collected' => $resP['cash_debt']
 ];
 
-// 2. Ventas Semanales (Solo Ventas volumen)
-$dateCondition = "fecha >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)";
-
-$weeklyWhere = prependWhere($whereClauseVentas, $dateCondition);
+// 2. Ventas Semanales (Solo Ventas volumen) - Now follows the same filter
 $sql = "SELECT DATE(fecha) as fecha, COUNT(*) as cantidad, SUM(total) as total 
         FROM ventas v
-        $weeklyWhere
+        $statsWhereVentas
         GROUP BY DATE(fecha) 
-        ORDER BY fecha DESC";
+        ORDER BY fecha DESC
+        LIMIT 14"; // Show last 14 data points (days) present in the filter
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt->execute($finalStatsParams);
 $ventas_semanales = $stmt->fetchAll();
 
 // 3. Productos Top (Solo Ventas)
@@ -105,15 +172,77 @@ $sql = "SELECT p.nombre, SUM(vd.cantidad) as total_vendido
         FROM venta_detalles vd 
         JOIN productos p ON vd.producto_id = p.id 
         JOIN ventas v ON vd.venta_id = v.id
-        $whereClauseVentas
+        $statsWhereVentas
         GROUP BY p.id, p.nombre 
         ORDER BY total_vendido DESC 
         LIMIT 5";
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt->execute($finalStatsParams);
 $productos_mas_vendidos = $stmt->fetchAll();
-?>
 
+// ==========================================
+// TABLE QUERY
+// ==========================================
+// We reuse logic but params are User + Date + User + Date (Union)
+$finalTableParams = array_merge($params, $dateParams, $params, $dateParams);
+
+$sql_union = "
+(SELECT 
+    v.id as id,
+    v.fecha as fecha,
+    COALESCE(u.nombre, u.username) as usuario,
+    GROUP_CONCAT(COALESCE(p.nombre, vd.descripcion, 'Varios') SEPARATOR ', ') as detalle,
+    'venta' as tipo,
+    v.total as total_ft,
+    LEAST(v.total, v.monto_pagado) as pagado,
+    (CASE WHEN v.total > v.monto_pagado THEN v.total - v.monto_pagado ELSE 0 END) as deuda,
+    (SELECT GROUP_CONCAT(mp.nombre SEPARATOR ', ') FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id) as metodo,
+    (SELECT referencia FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id AND mp.requiere_referencia = 1 LIMIT 1) as referencia,
+    (SELECT telefono FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id AND mp.requiere_referencia = 1 LIMIT 1) as telefono
+FROM ventas v
+LEFT JOIN usuarios u ON v.usuario_id = u.id
+JOIN venta_detalles vd ON v.id = vd.venta_id
+LEFT JOIN productos p ON vd.producto_id = p.id
+$statsWhereVentas
+GROUP BY v.id)
+
+UNION ALL
+
+(SELECT
+    cp.id as id,
+    cp.fecha as fecha,
+    COALESCE(u.nombre, u.username) as usuario,
+    CONCAT('Abono Saldo - ', c.nombre) as detalle,
+    'pago' as tipo,
+    0 as total_ft,
+    cp.monto as pagado,
+    0 as deuda,
+    'Efectivo' as metodo,
+    NULL as referencia,
+    NULL as telefono
+FROM cliente_pagos cp
+LEFT JOIN usuarios u ON cp.usuario_id = u.id
+JOIN clientes c ON cp.cliente_id = c.id
+$statsWherePagos)
+
+ORDER BY fecha DESC
+LIMIT 2000
+";
+
+$stmt = $pdo->prepare($sql_union);
+$stmt->execute($finalTableParams);
+$transactions = $stmt->fetchAll();
+
+// Calculate Totals for Footer
+$ft_total_facturado = 0;
+$ft_total_cash = 0;
+$ft_total_deuda = 0;
+foreach ($transactions as $t) {
+    $ft_total_facturado += $t['total_ft'];
+    $ft_total_cash += $t['pagado'];
+    $ft_total_deuda += $t['deuda'];
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -276,106 +405,6 @@ $productos_mas_vendidos = $stmt->fetchAll();
             </div>
         </div>
 
-        <?php
-        // Filtros Fecha
-        $period = $_GET['period'] ?? 'today'; // Default to today for speed
-        $dateFrom = $_GET['date_from'] ?? '';
-        $dateTo = $_GET['date_to'] ?? '';
-
-        $dateWhereV = "";
-        $dateWhereP = "";
-        $dateParams = [];
-
-        if ($period === 'custom' && !empty($dateFrom) && !empty($dateTo)) {
-            $dateWhereV = "AND DATE(v.fecha) BETWEEN ? AND ?";
-            $dateWhereP = "AND DATE(cp.fecha) BETWEEN ? AND ?";
-            $dateParams = [$dateFrom, $dateTo];
-        } else {
-            $colV = "DATE(v.fecha)";
-            $colP = "DATE(cp.fecha)";
-            switch ($period) {
-                case 'today':
-                    $dateWhereV = "AND $colV = CURDATE()";
-                    $dateWhereP = "AND $colP = CURDATE()";
-                    break;
-                case 'week':
-                    $dateWhereV = "AND YEARWEEK(v.fecha, 1) = YEARWEEK(CURDATE(), 1)";
-                    $dateWhereP = "AND YEARWEEK(cp.fecha, 1) = YEARWEEK(CURDATE(), 1)";
-                    break;
-                case 'month':
-                    $dateWhereV = "AND MONTH(v.fecha) = MONTH(CURDATE()) AND YEAR(v.fecha) = YEAR(CURDATE())";
-                    $dateWhereP = "AND MONTH(cp.fecha) = MONTH(CURDATE()) AND YEAR(cp.fecha) = YEAR(CURDATE())";
-                    break;
-                case 'year':
-                    $dateWhereV = "AND YEAR(v.fecha) = YEAR(CURDATE())";
-                    $dateWhereP = "AND YEAR(cp.fecha) = YEAR(CURDATE())";
-                    break;
-                case 'all':
-                default:
-                    break;
-            }
-        }
-
-        $finalParams = array_merge($params, $dateParams, $params, $dateParams);
-
-        $sql_union = "
-        (SELECT 
-            v.id as id,
-            v.fecha as fecha,
-            COALESCE(u.nombre, u.username) as usuario,
-            GROUP_CONCAT(COALESCE(p.nombre, vd.descripcion, 'Varios') SEPARATOR ', ') as detalle,
-            'venta' as tipo,
-            v.total as total_ft,
-            LEAST(v.total, v.monto_pagado) as pagado,
-            (CASE WHEN v.total > v.monto_pagado THEN v.total - v.monto_pagado ELSE 0 END) as deuda,
-            (SELECT GROUP_CONCAT(mp.nombre SEPARATOR ', ') FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id) as metodo,
-            (SELECT referencia FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id AND mp.requiere_referencia = 1 LIMIT 1) as referencia,
-            (SELECT telefono FROM venta_pagos vp JOIN metodos_pago mp ON vp.metodo_pago_id = mp.id WHERE vp.venta_id = v.id AND mp.requiere_referencia = 1 LIMIT 1) as telefono
-        FROM ventas v
-        LEFT JOIN usuarios u ON v.usuario_id = u.id
-        JOIN venta_detalles vd ON v.id = vd.venta_id
-        LEFT JOIN productos p ON vd.producto_id = p.id
-        $whereClauseVentas $dateWhereV
-        GROUP BY v.id)
-
-        UNION ALL
-
-        (SELECT
-            cp.id as id,
-            cp.fecha as fecha,
-            COALESCE(u.nombre, u.username) as usuario,
-            CONCAT('Abono Saldo - ', c.nombre) as detalle,
-            'pago' as tipo,
-            0 as total_ft,
-            cp.monto as pagado,
-            0 as deuda,
-            'Efectivo' as metodo,
-            NULL as referencia,
-            NULL as telefono
-        FROM cliente_pagos cp
-        LEFT JOIN usuarios u ON cp.usuario_id = u.id
-        JOIN clientes c ON cp.cliente_id = c.id
-        $whereClausePagos $dateWhereP)
-
-        ORDER BY fecha DESC
-        LIMIT 2000
-        ";
-
-        $stmt = $pdo->prepare($sql_union);
-        $stmt->execute($finalParams);
-        $transactions = $stmt->fetchAll();
-
-        // Calculate Totals for Footer
-        $ft_total_facturado = 0;
-        $ft_total_cash = 0;
-        $ft_total_deuda = 0;
-        foreach ($transactions as $t) {
-            $ft_total_facturado += $t['total_ft'];
-            $ft_total_cash += $t['pagado'];
-            $ft_total_deuda += $t['deuda'];
-        }
-        ?>
-
         <!-- Transactions Table -->
         <div class="bg-white p-6 border border-gray-300 shadow-none mt-8 mb-8">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -401,14 +430,27 @@ $productos_mas_vendidos = $stmt->fetchAll();
                     <div id="customDateInputs" class="flex items-center gap-2"
                         style="display: <?php echo $period === 'custom' ? 'flex' : 'none'; ?>;">
                         <input type="date" name="date_from" value="<?php echo htmlspecialchars($dateFrom); ?>"
-                            class="hidden">
-                        <span class="text-xs text-gray-500">(Usar filtros arriba)</span>
+                            class="border-gray-300 rounded-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500">
+                        <span class="text-gray-500">-</span>
+                        <input type="date" name="date_to" value="<?php echo htmlspecialchars($dateTo); ?>"
+                            class="border-gray-300 rounded-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500">
+                        <button type="submit"
+                            class="bg-gray-700 text-white px-3 py-1 text-sm hover:bg-gray-800 rounded-none">
+                            <i class="fas fa-filter mr-1"></i>Filtrar
+                        </button>
                     </div>
                 </form>
                 <script>
                     function toggleDateInputs() {
                         const period = document.getElementById('period').value;
-                        if (period !== 'custom') document.getElementById('periodForm').submit();
+                        const customDiv = document.getElementById('customDateInputs');
+
+                        if (period === 'custom') {
+                            customDiv.style.display = 'flex';
+                        } else {
+                            customDiv.style.display = 'none';
+                            document.getElementById('periodForm').submit();
+                        }
                     }
                 </script>
 
@@ -492,7 +534,7 @@ $productos_mas_vendidos = $stmt->fetchAll();
                             <td class="px-3 py-2 text-right text-red-600">
                                 $<?php echo number_format($ft_total_deuda, 2); ?></td>
                         </tr>
-                    </tfoot>
+                        </footer>
                 </table>
             </div>
         </div>
