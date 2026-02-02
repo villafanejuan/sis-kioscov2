@@ -314,7 +314,7 @@ foreach ($transactions as $t) {
                         <select name="user_filter" id="user_filter" onchange="this.form.submit()"
                             class="border-gray-300 rounded-none shadow-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500">
                             <option value="all" <?php echo (!isset($_GET['user_filter']) || $_GET['user_filter'] === 'all') ? 'selected' : ''; ?>>
-                                📊 General (Todos)
+                                Todas las ventas
                             </option>
                             <option value="<?php echo $_SESSION['user_id']; ?>" <?php echo (isset($_GET['user_filter']) && $_GET['user_filter'] == $_SESSION['user_id']) ? 'selected' : ''; ?>>
                                 👤 Mi Usuario
@@ -419,12 +419,12 @@ foreach ($transactions as $t) {
                             value="<?php echo htmlspecialchars($_GET['user_filter']); ?>">
                     <?php endif; ?>
                     <select name="period" id="period" onchange="toggleDateInputs()"
-                        class="border-gray-300 rounded-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500">
-                        <option value="today" <?php echo $period === 'today' ? 'selected' : ''; ?>>📅 Hoy</option>
-                        <option value="week" <?php echo $period === 'week' ? 'selected' : ''; ?>>📅 Semana</option>
-                        <option value="month" <?php echo $period === 'month' ? 'selected' : ''; ?>>📅 Mes</option>
-                        <option value="all" <?php echo $period === 'all' ? 'selected' : ''; ?>>∞ Todo</option>
-                        <option value="custom" <?php echo $period === 'custom' ? 'selected' : ''; ?>>📆 Rango</option>
+                        class="border-black-300 rounded-none text-sm py-1 focus:ring-gray-500 focus:border-gray-500 bg-gray-100">
+                        <option value="today" <?php echo $period === 'today' ? 'selected' : ''; ?>>Hoy</option>
+                        <option value="week" <?php echo $period === 'week' ? 'selected' : ''; ?>>Semana</option>
+                        <option value="month" <?php echo $period === 'month' ? 'selected' : ''; ?>>Mes</option>
+                        <option value="all" <?php echo $period === 'all' ? 'selected' : ''; ?>>Todo</option>
+                        <option value="custom" <?php echo $period === 'custom' ? 'selected' : ''; ?>>Rango</option>
                     </select>
 
                     <div id="customDateInputs" class="flex items-center gap-2"

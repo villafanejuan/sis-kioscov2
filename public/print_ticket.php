@@ -30,7 +30,7 @@ if (!$venta) {
 // Obtener detalles de productos
 $stmt = $pdo->prepare("
     SELECT vd.*, 
-           COALESCE(p.nombre, vd.descripcion, 'Varios') as producto_nombre,
+           COALESCE(p.nombre, 'Varios') as producto_nombre,
            p.codigo_barra as producto_codigo
     FROM venta_detalles vd
     LEFT JOIN productos p ON vd.producto_id = p.id

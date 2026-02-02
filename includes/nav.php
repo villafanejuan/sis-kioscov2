@@ -25,7 +25,7 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
             <i class="fas fa-bars text-xl"></i>
         </button>
         <div class="ml-3 flex items-center font-bold text-gray-800 text-lg">
-            <i class="fas fa-store mr-2"></i> Kiosco Nico
+            <i class="fas fa-store mr-2"></i> KIOSCO
         </div>
     </div>
 </div>
@@ -41,7 +41,7 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
     <div class="h-16 flex items-center px-6 border-b border-gray-200">
         <i class="fas fa-store text-2xl mr-3 text-gray-800"></i>
         <span class="text-lg font-bold tracking-wide whitespace-nowrap">
-            <?php echo "Kiosco Nico" ?>
+            <?php echo "Kiosco" ?>
         </span>
     </div>
 
