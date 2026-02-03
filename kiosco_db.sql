@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-02-2026 a las 04:12:15
+-- Tiempo de generación: 03-02-2026 a las 03:39:49
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -11,6 +11,7 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
+/*aca esta la bd*/
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -45,7 +46,8 @@ INSERT INTO `categorias` (`id`, `nombre`, `descripcion`) VALUES
 (5, 'nueva CAT', 'categoria de PRUEBA'),
 (7, 'salchipapa', 'xD'),
 (8, 'Corazon chico', 'asdjsajd'),
-(9, 'Corazon chico', '');
+(9, 'Corazon chico', ''),
+(10, 'Tragos', 'Tragos artesanales');
 
 -- --------------------------------------------------------
 
@@ -72,8 +74,18 @@ CREATE TABLE `clientes` (
 --
 
 INSERT INTO `clientes` (`id`, `nombre`, `email`, `telefono`, `saldo_cuenta`, `limite_credito`, `notas`, `activo`, `created_at`, `updated_at`, `direccion`) VALUES
-(1, 'pepe toño', 'asddd@gmail.com', '12312321', 0.00, 0.00, NULL, 1, '2025-12-15 21:57:05', '2025-12-17 00:16:29', 'calle falsa 123'),
-(2, 'jorge', 'jorge@gmailc.om', '1111', -4950.00, 0.00, NULL, 0, '2025-12-16 00:38:47', '2026-02-01 02:39:51', '');
+(1, 'pepe argento', 'asddd@gmail.com', '12312321', 0.00, 0.00, NULL, 1, '2025-12-15 21:57:05', '2026-02-02 20:25:46', 'calle falsa 123'),
+(2, 'jorge', 'jorge@gmailc.om', '1111', -4950.00, 0.00, NULL, 0, '2025-12-16 00:38:47', '2026-02-01 02:39:51', ''),
+(3, 'Juan Pérez', 'juan.perez@gmail.com', '3415123456', 1500.00, 5000.00, 'Cliente con buen historial de pagos', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Av. Pellegrini 1234, Rosario'),
+(4, 'María González', 'maria.gonzalez@yahoo.com', '3424987654', -320.50, 3000.00, 'Tiene una deuda pendiente del último mes', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'San Martín 455, Santa Fe'),
+(5, 'Carlos López', 'carlos.lopez@hotmail.com', '3516123344', 0.00, 2000.00, NULL, 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Bv. Illia 890, Córdoba'),
+(6, 'Ana Rodríguez', 'ana.rodriguez@gmail.com', '2215987456', 780.25, 4000.00, 'Compra regularmente', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Calle 12 N° 345, La Plata'),
+(7, 'Luis Fernández', NULL, '2614457788', -1200.00, 1500.00, 'Cliente moroso, seguimiento activo', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Godoy Cruz 980, Mendoza'),
+(8, 'Sofía Martínez', 'sofia.martinez@gmail.com', NULL, 2500.00, 6000.00, 'Cliente premium', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Av. Colón 210, Mar del Plata'),
+(9, 'Ricardo Suárez', 'ricardo.suarez@outlook.com', '3815129988', 0.00, 1000.00, 'Cuenta sin movimientos recientes', 0, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Belgrano 77, Tucumán'),
+(10, 'Luciana Díaz', 'luciana.diaz@gmail.com', '2994012233', 95.75, 2500.00, 'Saldo a favor mínimo', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Roca 456, Neuquén'),
+(11, 'Pedro Álvarez', 'pedro.alvarez@gmail.com', '3885123345', -50.00, 800.00, 'Pequeña deuda, notificar', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Alvear 102, Jujuy'),
+(12, 'Valeria Romero', 'valeria.romero@gmail.com', '2645981122', 1800.00, 3500.00, 'Pagos siempre en término', 1, '2026-02-02 20:27:42', '2026-02-02 20:27:42', 'Mitre 640, San Juan');
 
 -- --------------------------------------------------------
 
@@ -429,7 +441,8 @@ INSERT INTO `movimientos_caja` (`id`, `turno_id`, `tipo`, `monto`, `descripcion`
 (85, 35, 'venta', 2000.00, 'Venta #64', 64, '2026-01-20 17:08:57', 6, '2026-01-20 20:08:57'),
 (86, 35, 'venta', 2000.00, 'Venta #65', 65, '2026-01-20 17:18:52', 6, '2026-01-20 20:18:52'),
 (87, 35, 'venta', 10.00, 'Venta #66', 66, '2026-01-20 17:24:38', 6, '2026-01-20 20:24:38'),
-(88, 35, 'venta', 5000.00, 'Venta #67', 67, '2026-02-01 00:03:46', 6, '2026-02-01 03:03:46');
+(88, 35, 'venta', 5000.00, 'Venta #67', 67, '2026-02-01 00:03:46', 6, '2026-02-01 03:03:46'),
+(89, 35, 'venta', 0.00, 'Transferencia ($750.00) - Ref: Juan Perez (Tel: 120\'133)', 68, '2026-02-02 17:52:34', 6, '2026-02-02 20:52:34');
 
 -- --------------------------------------------------------
 
@@ -455,7 +468,7 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `codigo_barra`, `categoria_id`, `imagen`, `created_at`, `deleted_at`) VALUES
-(1, 'Coca Cola 500ml', 'Refresco de cola', 150.00, 12, '123456789012', 1, NULL, '2025-09-25 18:19:08', NULL),
+(1, 'Coca Cola 500ml', 'Refresco de cola', 150.00, 7, '123456789012', 1, NULL, '2025-09-25 18:19:08', '2026-02-02 20:22:43'),
 (2, 'Papas Lays', 'Chips de papa', 100.00, 13, '111111', 2, NULL, '2025-09-25 18:19:08', NULL),
 (3, 'Leche La Serenísima', 'Leche entera 1L', 120.00, 19, '123123', 3, NULL, '2025-09-25 18:19:08', NULL),
 (4, 'Pan Lactal', 'Pan blanco 500g', 80.00, 10, '7613035068391', 4, NULL, '2025-09-25 18:19:08', NULL),
@@ -465,7 +478,9 @@ INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `codi
 (8, 'nuevo productoes', 'una cosa raradsd', 10001.00, 296, '123123123', 5, NULL, '2025-12-14 23:30:37', '2025-12-14 23:31:26'),
 (9, 'velas', 'son velas man', 10000.00, 30, '4732649832', 8, NULL, '2025-12-15 19:49:33', NULL),
 (10, 'coca cola nueva', '', 5000.00, 43, '5449000000996', 1, NULL, '2025-12-17 18:42:36', NULL),
-(11, 'off', '', 4000.00, 123, '7798047032537', 5, NULL, '2025-12-17 18:58:08', NULL);
+(11, 'off', '', 4000.00, 123, '7798047032537', 5, NULL, '2025-12-17 18:58:08', NULL),
+(12, 'Coca Cola Naranja', 'asdasda', 123.00, 11, '779391231822', 8, NULL, '2026-02-02 20:17:46', NULL),
+(13, 'Coca Cola Zero', 'Buena Fresca', 1400.00, 2, '4001230', 1, NULL, '2026-02-02 20:20:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -558,7 +573,8 @@ INSERT INTO `proveedor` (`idProveedor`, `razon_social`, `nombre_fantasia`, `cuit
 (4, 'Estudio Contable Fernández', NULL, '27234567890', 'Exento', '9 de Julio 1123', 'Rafaela', 'Santa Fe', '2300', '03492-432100', 'estudiofernandez@gmail.com', NULL, 'Laura Fernández', '03492-154567890', 'Banco Galicia', '0070590920000004567890', 'ESTUDIO.FERNANDEZ', 'Honorarios mensuales', 'Activo', '2026-01-05'),
 (5, 'Logística Norte S.A.', 'Norte Logística', '30987654321', 'Responsable Inscripto', 'Av. Circunvalación 5400', 'Córdoba', 'Córdoba', '5000', '0351-4987654', 'info@nortelogistica.com.ar', 'www.nortelogistica.com.ar', 'Pablo Ruiz', '0351-156543210', 'Banco BBVA', '0170590920000001122334', 'NORTE.LOGISTICA', 'Transporte de mercadería', 'Activo', '2026-01-05'),
 (6, 'Rtoo', 'tu nno mete cabra', '2034403', 'Responsable Inscripto', 'asdasd', NULL, NULL, NULL, '3121286800', 'test@example.us', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Activo', '2026-01-05'),
-(7, 'Juanjo S.A', 'Fantasia', '202323992', 'Responsable Inscripto', 'nashe', NULL, NULL, NULL, '3408-402912', 'juanjo@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Activo', '2026-01-05');
+(7, 'Juanjo S.A', 'Fantasia', '202323992', 'Responsable Inscripto', 'nashe', NULL, NULL, NULL, '3408-402912', 'juanjo@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Activo', '2026-01-05'),
+(8, 'Distribuidora Sur S.A.S', 'Sur Distribuciones', '203440322', 'Monotributista', 'San Cristobal, Santa Fe', NULL, NULL, NULL, '0341 4567891', 'juan.perez@example.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Activo', '2026-02-02');
 
 -- --------------------------------------------------------
 
@@ -746,7 +762,8 @@ INSERT INTO `ventas` (`id`, `usuario_id`, `cliente_id`, `total`, `descuento_tota
 (64, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:08:57'),
 (65, 6, NULL, 2000.00, 0.00, 2000.00, 2000.00, 0.00, '2026-01-20 20:18:52'),
 (66, 6, NULL, 10.00, 0.00, 10.00, 10.00, 0.00, '2026-01-20 20:24:37'),
-(67, 6, NULL, 5000.00, 0.00, 5000.00, 20000.00, 15000.00, '2026-02-01 03:03:46');
+(67, 6, NULL, 5000.00, 0.00, 5000.00, 20000.00, 15000.00, '2026-02-01 03:03:46'),
+(68, 6, 5, 750.00, 0.00, 750.00, 750.00, 0.00, '2026-02-02 20:52:34');
 
 -- --------------------------------------------------------
 
@@ -879,7 +896,8 @@ INSERT INTO `venta_detalles` (`id`, `venta_id`, `producto_id`, `descripcion`, `c
 (75, 64, NULL, 'vario', 1, 2000.00, 2000.00),
 (76, 65, NULL, 'Item Manual', 1, 2000.00, 2000.00),
 (77, 66, NULL, 'Varios', 1, 10.00, 10.00),
-(78, 67, 10, 'coca cola nueva', 1, 5000.00, 5000.00);
+(78, 67, 10, 'coca cola nueva', 1, 5000.00, 5000.00),
+(79, 68, 1, 'Coca Cola 500ml', 5, 150.00, 750.00);
 
 -- --------------------------------------------------------
 
@@ -948,7 +966,8 @@ INSERT INTO `venta_pagos` (`id`, `venta_id`, `metodo_pago_id`, `monto`, `referen
 (44, 64, 1, 2000.00, NULL, NULL, '2026-01-20 20:08:57'),
 (45, 65, 1, 2000.00, NULL, NULL, '2026-01-20 20:18:52'),
 (46, 66, 1, 10.00, NULL, NULL, '2026-01-20 20:24:38'),
-(47, 67, 1, 20000.00, NULL, NULL, '2026-02-01 03:03:46');
+(47, 67, 1, 20000.00, NULL, NULL, '2026-02-01 03:03:46'),
+(48, 68, 4, 750.00, 'Juan Perez', '120\'133', '2026-02-02 20:52:34');
 
 --
 -- Índices para tablas volcadas
@@ -1104,13 +1123,13 @@ ALTER TABLE `venta_pagos`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `cliente_pagos`
@@ -1140,13 +1159,13 @@ ALTER TABLE `metodos_pago`
 -- AUTO_INCREMENT de la tabla `movimientos_caja`
 --
 ALTER TABLE `movimientos_caja`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `promociones`
@@ -1164,7 +1183,7 @@ ALTER TABLE `promocion_productos`
 -- AUTO_INCREMENT de la tabla `proveedor`
 --
 ALTER TABLE `proveedor`
-  MODIFY `idProveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `idProveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -1188,7 +1207,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT de la tabla `venta_descuentos`
@@ -1200,13 +1219,13 @@ ALTER TABLE `venta_descuentos`
 -- AUTO_INCREMENT de la tabla `venta_detalles`
 --
 ALTER TABLE `venta_detalles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
 
 --
 -- AUTO_INCREMENT de la tabla `venta_pagos`
 --
 ALTER TABLE `venta_pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- Restricciones para tablas volcadas
