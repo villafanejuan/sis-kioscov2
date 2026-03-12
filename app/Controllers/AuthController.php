@@ -125,7 +125,9 @@ class AuthController extends Controller
         $_SESSION['last_activity'] = time();
 
         // Obtener nombre del rol para checkAdmin()
-        if ($user['role_id']) {
+        if (!empty($user['role'])) {
+            $_SESSION['role'] = strtolower($user['role']);
+        } elseif ($user['role_id']) {
             $db = Database::getInstance();
             $stmt = $db->getConnection()->prepare("SELECT nombre FROM roles WHERE id = ?");
             $stmt->execute([$user['role_id']]);
