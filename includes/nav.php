@@ -15,7 +15,38 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
             /* w-64 */
         }
     }
+    .shortcut-hint {
+        font-size: 0.65rem;
+        opacity: 0.5;
+        margin-left: auto;
+        border: 1px solid currentColor;
+        padding: 0 4px;
+        border-radius: 3px;
+    }
+    @media (max-width: 768px) {
+        .shortcut-hint { display: none; }
+    }
 </style>
+
+<script>
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    var shortcuts = {
+        'F1': 'dashboard.php',
+        'F2': 'products.php',
+        'F3': 'categories.php',
+        'F4': 'customers.php',
+        'F5': 'sales.php',
+        'F6': 'cash.php'
+    };
+    
+    if (shortcuts[e.key]) {
+        e.preventDefault();
+        window.location.href = shortcuts[e.key];
+    }
+});
+</script>
 
 <!-- Mobile Header (Visible only on mobile) -->
 <div
@@ -52,9 +83,10 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
             <a href="dashboard.php" class="flex items-center px-4 py-2 rounded-lg transition
                 <?php echo $currentPage === 'dashboard'
                     ? 'bg-gray-100 text-gray-900 border-r-2 border-gray-800'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray900'; ?>">
                 <i class="fas fa-home w-5 text-lg mr-3"></i>
                 Dashboard
+                <span class="shortcut-hint">F1</span>
             </a>
         <?php endif; ?>
 
@@ -65,6 +97,7 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
                 <i class="fas fa-box w-5 text-lg mr-3"></i>
                 Productos
+                <span class="shortcut-hint">F2</span>
             </a>
         <?php endif; ?>
 
@@ -75,6 +108,7 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
                 <i class="fas fa-tags w-5 text-lg mr-3"></i>
                 Categorías
+                <span class="shortcut-hint">F3</span>
             </a>
         <?php endif; ?>
 
@@ -85,6 +119,29 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
                 <i class="fas fa-address-book w-5 text-lg mr-3"></i>
                 Clientes
+                <span class="shortcut-hint">F4</span>
+            </a>
+        <?php endif; ?>
+
+        <?php if (canAccess('sales')): ?>
+            <a href="sales.php" class="flex items-center px-4 py-2 rounded-lg transition
+                <?php echo $currentPage === 'sales'
+                    ? 'bg-gray-100 text-gray-900 border-r-2 border-gray-800'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
+                <i class="fas fa-shopping-cart w-5 text-lg mr-3"></i>
+                Ventas
+                <span class="shortcut-hint">F5</span>
+            </a>
+        <?php endif; ?>
+
+        <?php if (canAccess('cash')): ?>
+            <a href="cash.php" class="flex items-center px-4 py-2 rounded-lg transition
+                <?php echo $currentPage === 'cash'
+                    ? 'bg-gray-100 text-gray-900 border-r-2 border-gray-800'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
+                <i class="fas fa-cash-register w-5 text-lg mr-3"></i>
+                Caja
+                <span class="shortcut-hint">F6</span>
             </a>
         <?php endif; ?>
 
@@ -105,26 +162,6 @@ $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
                 <i class="fas fa-users w-5 text-lg mr-3"></i>
                 Tickets
-            </a>
-        <?php endif; ?>
-
-        <?php if (canAccess('sales')): ?>
-            <a href="sales.php" class="flex items-center px-4 py-2 rounded-lg transition
-                <?php echo $currentPage === 'sales'
-                    ? 'bg-gray-100 text-gray-900 border-r-2 border-gray-800'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
-                <i class="fas fa-shopping-cart w-5 text-lg mr-3"></i>
-                Ventas
-            </a>
-        <?php endif; ?>
-
-        <?php if (canAccess('cash')): ?>
-            <a href="cash.php" class="flex items-center px-4 py-2 rounded-lg transition
-                <?php echo $currentPage === 'cash'
-                    ? 'bg-gray-100 text-gray-900 border-r-2 border-gray-800'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?>">
-                <i class="fas fa-cash-register w-5 text-lg mr-3"></i>
-                Caja
             </a>
         <?php endif; ?>
 
