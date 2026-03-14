@@ -175,6 +175,21 @@ sis-kiosco/
 - Cambiar contraseña
 - Cerrar sesión
 
+## ⌨️ Atajos de Teclado
+
+El sistema cuenta con atajos de teclado para navegación rápida:
+
+| Tecla | Sección |
+|-------|---------|
+| F1 | Dashboard |
+| F2 | Productos |
+| F3 | Categorías |
+| F4 | Clientes |
+| F5 | Ventas |
+| F6 | Caja |
+
+*Nota: Los atajos no funcionan cuando se está dentro de un campo de texto.*
+
 ## 🛠️ Mantenimiento
 
 ### Backups Automáticos
