@@ -6,8 +6,13 @@ Sistema completo de gestión para kioscos con arquitectura MVC, control de caja,
 
 ### ✅ Sistema de Roles y Permisos
 - **Administrador**: Control total del sistema.
-- **Kiosquero**: Ventas, caja propia, administración de productos (alta/baja/modificación).
-- **Cajero (Auditor)**: Rol de solo lectura para supervisión y auditoría de cajas ajenas.
+- **Kiosquero/Empleado**: Ventas, caja propia, administración de productos (alta/baja/modificación).
+- **Cajero**: Rol de solo lectura para supervisión y auditoría de cajas ajenas.
+
+### 👥 Gestión de Usuarios
+- Alta, modificación y baja de usuarios.
+- Asignación de roles (Admin, Kiosquero, Cajero, Empleado).
+- Control de acceso por permisos.
 
 ### 💰 Cuentas Corrientes y Finanzas
 - **Ventas Fiadas**: Soporte para Ventas a Crédito (Fiado) asociado a Clientes.
@@ -15,17 +20,30 @@ Sistema completo de gestión para kioscos con arquitectura MVC, control de caja,
 - **Cobro de Deudas**: Módulo "Clientes" para gestionar y registrar abonos de deuda.
 - **Caja Unificada**: El dinero en caja refleja tanto ventas contado como abonos de deuda.
 
-### � Punto de Venta Profesional
+### 🏪 Punto de Venta Profesional
 - **Pagos Mixtos**: Efectivo, Tarjeta, Transferencia y Cuenta Corriente.
-- **Promociones**: Sistema automático de descuentos.
+- **Promociones**: Sistema automático de descuentos por producto o categoría.
 - **Ticketera**: Interfaz de impresión optimizada (Hide UI elements).
 - **Offline First**: Todas las librerías (Tailwind, FontAwesome, JS) son locales. Funciona sin internet.
 
-### � Gestión de Stock Inteligente
+### 📦 Gestión de Proveedores
+- Alta, modificación y baja de proveedores.
+- Contacto y datos fiscales de proveedores.
+
+### 🎫 Sistema de Tickets
+- Gestión de tickets/remitos.
+- Seguimiento de entregas.
+
+### 💳 Métodos de Pago
+- Configuración de métodos de pago disponibles.
+- Activar/desactivar métodos de pago.
+
+### 📊 Gestión de Stock Inteligente
 - **Reposición Rápida**: Botón "Quick Restock" directamente en el Dashboard para sumar stock sin navegar.
 - **Alertas**: Indicadores visuales y filtros para "Stock Bajo".
+- Control de inventario por producto.
 
-### 📊 Reportes Unificados y Exportación
+### 📈 Reportes Unificados y Exportación
 - **Historial Único**: Tabla cronológica que mezcla **VENTAS** y **ABONOS** para auditoría perfecta.
 - **Métricas Reales**: Distinción clara entre "Total Facturado" (Ventas) y "Efectivo Ingresado" (Caja Real).
 - **Exportación**: Generación nativa de **Excel** y **PDF** de todos los reportes.
@@ -36,6 +54,7 @@ Sistema completo de gestión para kioscos con arquitectura MVC, control de caja,
 - Encriptación de datos sensibles
 - Auditoría completa de acciones
 - Sesiones seguras
+- Perfil de usuario con cambio de contraseña
 
 ## 📋 Requisitos
 
@@ -78,20 +97,41 @@ sis-kiosco/
 │   ├── Core/              # Clases core
 │   ├── Models/            # Modelos de datos
 │   ├── Controllers/       # Controladores
+│   ├── Helpers/          # Funciones helper
 │   └── bootstrap.php      # Inicialización
+├── config/                # Configuración
+├── database/
+│   └── migrations/        # Migraciones de BD
 ├── public/                # Punto de entrada público
 │   ├── assets/            # CSS/JS Locales (Offline)
 │   ├── index.php          # Login
-│   ├── dashboard.php      # Dashboard con Quick Restock
-│   ├── sales.php          # POS
+│   ├── dashboard.php     # Dashboard con Quick Restock
+│   ├── sales.php         # POS
+│   ├── products.php      # Gestión de productos
+│   ├── categories.php    # Categorías
+│   ├── customers.php     # Clientes
 │   ├── customer_account.php # Gestión Deudas
-│   └── reports.php        # Reportes Unificados
+│   ├── cash.php          # Gestión de caja
+│   ├── reports.php       # Reportes Unificados
+│   ├── users.php         # Gestión de usuarios
+│   ├── proveedores.php   # Gestión de proveedores
+│   ├── tickets.php       # Sistema de tickets
+│   ├── promotions.php    # Promociones
+│   ├── payment_methods.php # Métodos de pago
+│   ├── config.php        # Configuración del sistema
+│   └── profile.php       # Perfil de usuario
 ├── storage/
 │   ├── logs/              # Logs del sistema
+│   └── backups/          # Backups automáticos
+├── includes/              # Componentes compartidos
 └── README.md
 ```
 
 ## 🎯 Uso Rápido
+
+### Iniciar Sesión
+1. Acceder a `http://localhost/sis-kiosco/public/`
+2. Ingresar usuario y contraseña
 
 ### Abrir Turno de Caja
 1. Ir a **Caja** → **Abrir Turno**
@@ -108,13 +148,32 @@ sis-kiosco/
 2. Click en el botón **(+) Azul**.
 3. Ingresar cantidad y confirmar. ¡Listo!
 
+### Gestionar Usuarios (Admin)
+1. Ir a **Usuarios** (solo visible para Admin)
+2. Alta, modificar roles o desactivar usuarios.
+
+### Gestionar Proveedores
+1. Ir a **Proveedores**
+2. Agregar, modificar o eliminar proveedores.
+
+### Crear Promociones
+1. Ir a **Promos**
+2. Crear descuentos por producto o categoría.
+
 ## 📊 Reportes Disponibles
 
 - **Historial de Transacciones**: Visión unificada de ventas y cobros.
 - **Ventas por Empleado**: Performance individual.
 - **Productos Más Vendidos**: Top productos.
 - **Stock Crítico**: Productos con stock bajo.
+- **Reportes por Fecha**: Filtrar por rango de fechas.
 - **Exportación**: Botones Excel/PDF en la esquina superior.
+
+## 👤 Perfil de Usuario
+
+- Ver información del perfil
+- Cambiar contraseña
+- Cerrar sesión
 
 ## 🛠️ Mantenimiento
 
@@ -146,4 +205,4 @@ Sistema propietario para uso interno.
 ---
 
 **Versión**: 2.0 Professional  
-**Última actualización**: Diciembre 2025
+**Última actualización**: Marzo 2026
