@@ -104,9 +104,6 @@ if (isset($_SESSION['flash_message'])) {
                 <i class="fas fa-shield-alt mr-1"></i>
                 Sesión segura con encriptación
             </p>
-            <p class="mt-2 text-xs">
-                Usuario por defecto: <strong>admin</strong> / Contraseña: <strong>password</strong>
-            </p>
         </div>
     </div>
 
