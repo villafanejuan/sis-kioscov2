@@ -24,7 +24,8 @@ class AuthController extends Controller
     {
         // Si ya está autenticado, redirigir al dashboard
         if (isset($_SESSION['user_id'])) {
-            $this->redirect('dashboard.php');
+            header('Location: ./dashboard.php');
+            exit;
         }
 
         // Generar CSRF token
@@ -96,7 +97,9 @@ class AuthController extends Controller
             // Regenerar CSRF token
             Security::regenerateCsrf();
 
-            $this->redirect('dashboard.php');
+            // Redirigir usando ruta relativa
+            header('Location: ./dashboard.php');
+            exit;
 
         } catch (Exception $e) {
             Logger::warning('Intento de login fallido', [

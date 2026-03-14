@@ -69,9 +69,9 @@ abstract class Controller
             $_SESSION['flash_type'] = $type;
         }
 
-        // Si la URL no empieza con http, agregar base URL
-        if (strpos($url, 'http') !== 0) {
-            $url = $this->url($url);
+        // Usar ruta relativa si no es URL completa
+        if (strpos($url, 'http') !== 0 && strpos($url, './') !== 0) {
+            $url = './' . $url;
         }
 
         header("Location: {$url}");

@@ -68,6 +68,11 @@ if (!function_exists('canAccess')) {
             return in_array($section, ['dashboard', 'cash', 'reports']);
         }
 
+        // Empleado: mismo acceso que kiosquero
+        if ($role === 'empleado') {
+            return in_array($section, ['dashboard', 'products', 'sales', 'categories', 'cash', 'reports']);
+        }
+
         // Por defecto, si no está en las listas anteriores, no tiene acceso
         // Esto restringe 'users' y 'reports' a roles que no sean admin
         return false;

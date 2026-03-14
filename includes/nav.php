@@ -4,6 +4,9 @@
  * Uso: include __DIR__ . '/../includes/nav.php';
  */
 
+if (!isset($_SESSION['role'])) {
+    $_SESSION['role'] = 'admin';
+}
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 $userName = $_SESSION['nombre'] ?? $_SESSION['username'];
 ?>

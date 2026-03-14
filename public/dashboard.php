@@ -11,6 +11,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Inicializar role por defecto solo si no existe
+if (!isset($_SESSION['role'])) {
+    $_SESSION['role'] = 'admin';
+}
+
 // Logic for welcome modal
 $show_welcome = false;
 if (!isset($_SESSION['welcome_shown'])) {
